@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,13 +7,15 @@ import 'package:path_provider/path_provider.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../data/photographer_ai_service.dart';
+import '../../data/ml_composition_analyzer.dart';
 import '../../providers/camera_provider.dart';
 import '../widgets/composition_overlay.dart';
 import '../widgets/professional_guidance_overlay.dart';
 
 export '../../data/photographer_ai_service.dart';
+export '../../data/ml_composition_analyzer.dart';
 
-/// Main camera page with preview, composition overlay, and professional guidance
+/// Main camera page with ML-powered composition analysis
 class MainCameraPage extends ConsumerStatefulWidget {
   const MainCameraPage({super.key});
 
@@ -22,22 +25,24 @@ class MainCameraPage extends ConsumerStatefulWidget {
 
 class _MainCameraPageState extends ConsumerState<MainCameraPage>
     with WidgetsBindingObserver {
-  Timer? _analysisTimer;
   CompositionAnalysis? _currentAnalysis;
   bool _isTakingPicture = false;
+  MLCompositionAnalyzer? _mlAnalyzer;
+  bool _isAnalyzing = false;
+  final int _analysisFrameSkip = 15; // 每15帧分析一次，避免性能问题
+  int _frameCount = 0;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initCamera();
-    _startAnalysisTimer();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _analysisTimer?.cancel();
+    _mlAnalyzer?.dispose();
     super.dispose();
   }
 
@@ -55,25 +60,68 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
 
   Future<void> _initCamera() async {
     final cameras = await availableCameras();
-    if (mounted) {
-      ref.read(cameraProvider.notifier).initializeCamera(cameras);
-    }
+    if (!mounted) return;
+
+    ref.read(cameraProvider.notifier).initializeCamera(cameras);
+
+    // 等待相机初始化完成后设置图像分析
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
+    _mlAnalyzer = MLCompositionAnalyzer();
+    _startImageAnalysis();
   }
 
-  void _startAnalysisTimer() {
-    _analysisTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (mounted && ref.read(showGuidanceProvider)) {
-        _runAnalysis();
-      }
+  void _startImageAnalysis() {
+    final cameraState = ref.read(cameraProvider);
+    if (cameraState.controller == null) return;
+
+    cameraState.controller!.startImageStream((CameraImage image) {
+      if (!mounted || !ref.read(showGuidanceProvider)) return;
+
+      _frameCount++;
+      if (_frameCount % _analysisFrameSkip != 0) return;
+      if (_isAnalyzing) return;
+
+      _isAnalyzing = true;
+      _analyzeImage(image).then((analysis) {
+        if (mounted) {
+          setState(() {
+            _currentAnalysis = analysis;
+          });
+        }
+        _isAnalyzing = false;
+      }).catchError((_) {
+        _isAnalyzing = false;
+      });
     });
   }
 
-  void _runAnalysis() {
-    final analysis = ProfessionalPhotographerAI.analyze();
-    if (mounted) {
-      setState(() {
-        _currentAnalysis = analysis;
-      });
+  Future<CompositionAnalysis> _analyzeImage(CameraImage image) async {
+    if (_mlAnalyzer != null) {
+      final cameraState = ref.read(cameraProvider);
+      if (cameraState.controller != null) {
+        final rotation = inputImageRotationToInt(
+          cameraState.controller!.description.sensorOrientation,
+        );
+        return await _mlAnalyzer!.analyzeFrame(image, rotation);
+      }
+    }
+    // Fallback to mock if ML is not available
+    return ProfessionalPhotographerAI.analyze();
+  }
+
+  int inputImageRotationToInt(int sensorOrientation) {
+    // Convert sensor orientation to InputImageRotation
+    switch (sensorOrientation) {
+      case 90:
+        return 90;
+      case 180:
+        return 180;
+      case 270:
+        return 270;
+      default:
+        return 0;
     }
   }
 
@@ -85,6 +133,9 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
     try {
       final cameraState = ref.read(cameraProvider);
       if (cameraState.controller == null || !cameraState.isInitialized) return;
+
+      // 停止图像分析
+      await cameraState.controller!.stopImageStream();
 
       final directory = await getApplicationDocumentsDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -117,6 +168,10 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
     } finally {
       if (mounted) {
         setState(() => _isTakingPicture = false);
+        // 恢复图像分析
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _startImageAnalysis();
+        });
       }
     }
   }
@@ -178,6 +233,47 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
             Positioned.fill(
               child: ProfessionalGuidanceOverlay(
                 analysis: _currentAnalysis!,
+              ),
+            ),
+
+          // Loading indicator
+          if (_isAnalyzing)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 60,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.overlayBackground,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accent.withOpacity(0.8),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'AI 分析中...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textPrimary.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
 
