@@ -25,7 +25,6 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
   Timer? _analysisTimer;
   CompositionAnalysis? _currentAnalysis;
   bool _isTakingPicture = false;
-  bool _showAnalysisDetail = false;
 
   @override
   void initState() {
@@ -179,12 +178,6 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
             Positioned.fill(
               child: ProfessionalGuidanceOverlay(
                 analysis: _currentAnalysis!,
-                showDetail: _showAnalysisDetail,
-                onToggleDetail: () {
-                  setState(() {
-                    _showAnalysisDetail = !_showAnalysisDetail;
-                  });
-                },
               ),
             ),
 

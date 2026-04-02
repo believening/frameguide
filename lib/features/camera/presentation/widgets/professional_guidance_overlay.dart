@@ -8,14 +8,10 @@ import '../../data/photographer_ai_service.dart';
 /// 专业摄影师指导覆盖层
 class ProfessionalGuidanceOverlay extends StatelessWidget {
   final CompositionAnalysis analysis;
-  final bool showDetail;
-  final VoidCallback onToggleDetail;
 
   const ProfessionalGuidanceOverlay({
     super.key,
     required this.analysis,
-    required this.showDetail,
-    required this.onToggleDetail,
   });
 
   @override
@@ -29,26 +25,20 @@ class ProfessionalGuidanceOverlay extends StatelessWidget {
           child: _ScoreBadge(score: analysis.score),
         ),
 
-        // Main guidance arrow
-        if (analysis.guidances.isNotEmpty)
+        // Main guidance arrow (show if only one guidance)
+        if (analysis.guidances.length == 1)
           Center(
             child: _GuidanceArrow(guidance: analysis.guidances.first),
           ),
 
-        // Photographer tip card
-        Positioned(
-          bottom: 160,
-          left: AppDimensions.spacingLg,
-          right: AppDimensions.spacingLg,
-          child: _TipCard(
-            tip: analysis.tip,
-            photographerNote: analysis.photographerNote,
-            onTap: onToggleDetail,
+        // Multiple arrows for multiple guidances
+        if (analysis.guidances.length > 1)
+          Center(
+            child: _MultipleGuidanceArrows(guidances: analysis.guidances),
           ),
-        ),
 
-        // Detail panel (expandable)
-        if (showDetail && analysis.guidances.length > 1)
+        // Guidance panel (always visible when expanded)
+        if (analysis.guidances.length > 1)
           Positioned(
             top: MediaQuery.of(context).padding.top + 60,
             left: AppDimensions.spacingLg,
@@ -58,41 +48,15 @@ class ProfessionalGuidanceOverlay extends StatelessWidget {
             ),
           ),
 
-        // Toggle hint
+        // Tip card
         Positioned(
-          top: MediaQuery.of(context).padding.top + AppDimensions.spacingLg,
+          bottom: 160,
           left: AppDimensions.spacingLg,
-          child: GestureDetector(
-            onTap: onToggleDetail,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.spacingMd,
-                vertical: AppDimensions.spacingSm,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.overlayBackground,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    showDetail ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.textPrimary,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${analysis.guidances.length} 条建议',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ).animate().fadeIn(),
+          right: AppDimensions.spacingLg,
+          child: _TipCard(
+            tip: analysis.tip,
+            photographerNote: analysis.photographerNote,
+          ),
         ),
       ],
     );
@@ -256,90 +220,204 @@ class _GuidanceArrow extends StatelessWidget {
   }
 }
 
+/// 多个方向箭头（同时显示多个调整建议）
+class _MultipleGuidanceArrows extends StatelessWidget {
+  final List<Guidance> guidances;
+
+  const _MultipleGuidanceArrows({required this.guidances});
+
+  @override
+  Widget build(BuildContext context) {
+    // 只显示前3个最重要的箭头
+    final displayGuides = guidances.take(3).toList();
+    
+    return Stack(
+      children: displayGuides.asMap().entries.map((entry) {
+        final index = entry.key;
+        final guidance = entry.value;
+        return _GuidanceArrowWithIndex(
+          guidance: guidance,
+          index: index,
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _GuidanceArrowWithIndex extends StatelessWidget {
+  final Guidance guidance;
+  final int index;
+
+  const _GuidanceArrowWithIndex({
+    required this.guidance,
+    required this.index,
+  });
+
+  Offset get _offset {
+    final direction = guidance.direction;
+    // 不同索引的箭头分布在不同位置
+    switch (index) {
+      case 0:
+        return _getOffsetForDirection(direction, 70.0);
+      case 1:
+        return _getOffsetForDirection(direction, 100.0) * 1.2;
+      case 2:
+        return _getOffsetForDirection(direction, 130.0) * 1.4;
+      default:
+        return Offset.zero;
+    }
+  }
+
+  Offset _getOffsetForDirection(String direction, double distance) {
+    if (direction.contains('左')) {
+      return direction.contains('前')
+          ? Offset(-distance * 0.8, -distance * 0.6)
+          : direction.contains('后')
+              ? Offset(-distance * 0.8, distance * 0.6)
+              : Offset(-distance, 0);
+    }
+    if (direction.contains('右')) {
+      return direction.contains('前')
+          ? Offset(distance * 0.8, -distance * 0.6)
+          : direction.contains('后')
+              ? Offset(distance * 0.8, distance * 0.6)
+              : Offset(distance, 0);
+    }
+    if (direction.contains('前')) {
+      return Offset(0, -distance);
+    }
+    if (direction.contains('后')) {
+      return Offset(0, distance);
+    }
+    return Offset.zero;
+  }
+
+  double get _rotation {
+    final direction = guidance.direction;
+    if (direction.contains('左') && !direction.contains('前') && !direction.contains('后')) {
+      return pi;
+    }
+    if (direction.contains('右') && !direction.contains('前') && !direction.contains('后')) {
+      return 0;
+    }
+    if (direction.contains('前')) {
+      return -pi / 2;
+    }
+    if (direction.contains('后')) {
+      return pi / 2;
+    }
+    if (direction.contains('左前')) {
+      return -pi / 4;
+    }
+    if (direction.contains('右前')) {
+      return -3 * pi / 4;
+    }
+    if (direction.contains('左后')) {
+      return pi / 4;
+    }
+    if (direction.contains('右后')) {
+      return 3 * pi / 4;
+    }
+    return 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (guidance.direction.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Transform.translate(
+      offset: _offset,
+      child: Transform.rotate(
+        angle: _rotation,
+        child: Container(
+          padding: const EdgeInsets.all(AppDimensions.spacingMd),
+          decoration: BoxDecoration(
+            color: AppColors.accent.withOpacity(0.25 + index * 0.05),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppColors.accent.withOpacity(0.8 - index * 0.2),
+              width: 2,
+            ),
+          ),
+          child: Icon(
+            Icons.arrow_forward,
+            size: AppDimensions.iconLg - index * 4,
+            color: AppColors.accent.withOpacity(1 - index * 0.2),
+          ),
+        ).animate(
+          onPlay: (controller) => controller.repeat(reverse: true),
+        ).scale(
+          begin: const Offset(1, 1),
+          end: const Offset(1.1, 1.1),
+          duration: (800 - index * 100).ms,
+        ),
+      ),
+    ).animate().fadeIn(delay: (200 + index * 100).ms);
+  }
+}
+
 class _TipCard extends StatelessWidget {
   final String tip;
   final String photographerNote;
-  final VoidCallback onTap;
 
   const _TipCard({
     required this.tip,
     required this.photographerNote,
-    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.spacingLg),
-        decoration: BoxDecoration(
-          color: AppColors.overlayBackground,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-          border: Border.all(color: AppColors.accent.withOpacity(0.5)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.camera_alt,
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.spacingLg),
+      decoration: BoxDecoration(
+        color: AppColors.overlayBackground,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        border: Border.all(color: AppColors.accent.withOpacity(0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.camera_alt,
+                color: AppColors.accent,
+                size: AppDimensions.iconMd,
+              ),
+              const SizedBox(width: AppDimensions.spacingSm),
+              const Text(
+                '摄影师建议',
+                style: TextStyle(
+                  fontSize: 12,
                   color: AppColors.accent,
-                  size: AppDimensions.iconMd,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(width: AppDimensions.spacingSm),
-                const Text(
-                  '摄影师建议',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.accent,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.spacingSm),
-            Text(
-              tip,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
               ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacingSm),
+          Text(
+            tip,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
             ),
-            const SizedBox(height: AppDimensions.spacingXs),
-            Text(
-              photographerNote,
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary.withOpacity(0.8),
-              ),
+          ),
+          const SizedBox(height: AppDimensions.spacingXs),
+          Text(
+            photographerNote,
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary.withOpacity(0.8),
             ),
-            const SizedBox(height: AppDimensions.spacingSm),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  '点击查看详情',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.accent.withOpacity(0.7),
-                  ),
-                ),
-                const SizedBox(width: 2),
-                Icon(
-                  Icons.touch_app,
-                  size: 12,
-                  color: AppColors.accent.withOpacity(0.7),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ).animate().fadeIn().slideY(begin: 0.3, end: 0),
-    );
+          ),
+        ],
+      ),
+    ).animate().fadeIn().slideY(begin: 0.3, end: 0);
   }
 }
 
