@@ -5,12 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
-import '../../data/mock_ai_service.dart';
+import '../../data/photographer_ai_service.dart';
 import '../../providers/camera_provider.dart';
 import '../widgets/composition_overlay.dart';
-import '../widgets/guidance_overlay.dart';
+import '../widgets/professional_guidance_overlay.dart';
 
-/// Main camera page with preview, composition overlay, and guidance
+export '../../data/photographer_ai_service.dart';
+
+/// Main camera page with preview, composition overlay, and professional guidance
 class MainCameraPage extends ConsumerStatefulWidget {
   const MainCameraPage({super.key});
 
@@ -21,11 +23,9 @@ class MainCameraPage extends ConsumerStatefulWidget {
 class _MainCameraPageState extends ConsumerState<MainCameraPage>
     with WidgetsBindingObserver {
   Timer? _analysisTimer;
-  String _currentTip = '';
-  String _currentDirection = '';
-  int _currentScore = 0;
+  CompositionAnalysis? _currentAnalysis;
   bool _isTakingPicture = false;
-  final MockAIService _mockAI = MockAIService();
+  bool _showAnalysisDetail = false;
 
   @override
   void initState() {
@@ -64,19 +64,18 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
   void _startAnalysisTimer() {
     _analysisTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (mounted && ref.read(showGuidanceProvider)) {
-        _runMockAnalysis();
+        _runAnalysis();
       }
     });
   }
 
-  void _runMockAnalysis() async {
-    final analysis = await _mockAI.analyzeImage();
-    if (!mounted) return;
-    setState(() {
-      _currentTip = analysis.tip;
-      _currentDirection = analysis.direction.text;
-      _currentScore = analysis.score;
-    });
+  void _runAnalysis() {
+    final analysis = ProfessionalPhotographerAI.analyze();
+    if (mounted) {
+      setState(() {
+        _currentAnalysis = analysis;
+      });
+    }
   }
 
   Future<void> _takePicture() async {
@@ -176,12 +175,16 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
             ),
 
           // AI Guidance overlay
-          if (showGuidance && _currentDirection.isNotEmpty)
+          if (showGuidance && _currentAnalysis != null)
             Positioned.fill(
-              child: GuidanceOverlay(
-                tip: _currentTip,
-                direction: _currentDirection,
-                score: _currentScore,
+              child: ProfessionalGuidanceOverlay(
+                analysis: _currentAnalysis!,
+                showDetail: _showAnalysisDetail,
+                onToggleDetail: () {
+                  setState(() {
+                    _showAnalysisDetail = !_showAnalysisDetail;
+                  });
+                },
               ),
             ),
 
