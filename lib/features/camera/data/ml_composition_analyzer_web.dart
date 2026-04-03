@@ -12,13 +12,13 @@ import 'package:camera/camera.dart';
 import 'photographer_ai_service.dart';
 
 @JS('setBackend')
-external dynamic setBackend(String backend);
+external JSFunction setBackend(String backend);
 
 @JS('loadBlazeFaceModel')
-external dynamic loadBlazeFaceModel();
+external JSFunction loadBlazeFaceModel();
 
 @JS('detectFaces')
-external dynamic detectFaces(dynamic imageData, int width, int height);
+external JSFunction detectFaces(JSAny imageData, int width, int height);
 
 /// Web 平台的 ML 分析器（使用 TensorFlow.js BlazeFace）
 class MLCompositionAnalyzer {
