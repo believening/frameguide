@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,6 +30,7 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
   bool _isAnalyzing = false;
   final int _analysisFrameSkip = 15; // 每15帧分析一次，避免性能问题
   int _frameCount = 0;
+  Timer? _mockAnalysisTimer;
 
   @override
   void initState() {
@@ -43,6 +43,7 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _mlAnalyzer?.dispose();
+    _mockAnalysisTimer?.cancel();
     super.dispose();
   }
 
@@ -93,6 +94,20 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
         _isAnalyzing = false;
       }).catchError((_) {
         _isAnalyzing = false;
+      });
+    });
+  }
+
+  void _startMockAnalysis() {
+    // Web 上使用 Mock AI，每2秒更新一次
+    _mockAnalysisTimer?.cancel();
+    _mockAnalysisTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (!mounted || !ref.read(showGuidanceProvider)) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _currentAnalysis = ProfessionalPhotographerAI.analyze();
       });
     });
   }
