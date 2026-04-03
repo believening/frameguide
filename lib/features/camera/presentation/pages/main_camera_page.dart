@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,25 +78,33 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
     final cameraState = ref.read(cameraProvider);
     if (cameraState.controller == null) return;
 
-    cameraState.controller!.startImageStream((CameraImage image) {
-      if (!mounted || !ref.read(showGuidanceProvider)) return;
+    // 启动 Mock AI 定时器作为后备
+    _startMockAnalysis();
 
-      _frameCount++;
-      if (_frameCount % _analysisFrameSkip != 0) return;
-      if (_isAnalyzing) return;
+    // 尝试启动图像流（移动端）
+    try {
+      cameraState.controller!.startImageStream((CameraImage image) {
+        if (!mounted || !ref.read(showGuidanceProvider)) return;
 
-      _isAnalyzing = true;
-      _analyzeImage(image).then((analysis) {
-        if (mounted) {
-          setState(() {
-            _currentAnalysis = analysis;
-          });
-        }
-        _isAnalyzing = false;
-      }).catchError((_) {
-        _isAnalyzing = false;
+        _frameCount++;
+        if (_frameCount % _analysisFrameSkip != 0) return;
+        if (_isAnalyzing) return;
+
+        _isAnalyzing = true;
+        _analyzeImage(image).then((analysis) {
+          if (mounted) {
+            setState(() {
+              _currentAnalysis = analysis;
+            });
+          }
+          _isAnalyzing = false;
+        }).catchError((_) {
+          _isAnalyzing = false;
+        });
       });
-    });
+    } catch (e) {
+      // Web 不支持 startImageStream，保持使用 Mock AI
+    }
   }
 
   void _startMockAnalysis() {
