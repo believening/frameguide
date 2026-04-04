@@ -19,23 +19,25 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Reinstall corrupted Android SDK 35
+      - name: Setup custom Android SDK
+        env:
+          ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
         run: |
-          SDK_ROOT="$ANDROID_SDK_ROOT"
-          # Remove corrupted android-35
-          rm -rf "$SDK_ROOT/platforms/android-35"
-          rm -rf "$SDK_ROOT/build-tools/35.0.0"
+          mkdir -p "$ANDROID_SDK_ROOT"
+          # Copy existing SDK except the corrupted platform
+          cp -rn "$ANDROID_HOME/"* "$ANDROID_SDK_ROOT/" 2>/dev/null || true
+          rm -rf "$ANDROID_SDK_ROOT/platforms/android-35"
+          rm -rf "$ANDROID_SDK_ROOT/build-tools/35.*"
           # Find sdkmanager
-          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           if [ ! -f "$SDKMANAGER" ]; then
-            SDKMANAGER="$SDK_ROOT/tools/bin/sdkmanager"
-          fi
-          if [ ! -f "$SDKMANAGER" ]; then
-            SDKMANAGER="$(find /opt -name sdkmanager 2>/dev/null | head -1)"
+            SDKMANAGER="$ANDROID_HOME/tools/bin/sdkmanager"
           fi
           echo "Using sdkmanager: $SDKMANAGER"
-          # Reinstall android-35
-          yes | "$SDKMANAGER" --install "platforms;android-35" || echo "Failed to install android-35"
+          # Accept licenses and install android-35
+          yes | "$SDKMANAGER" --licenses 2>/dev/null || true
+          "$SDKMANAGER" --install "platforms;android-35" --sdk_root="$ANDROID_SDK_ROOT" 2>&1 | tail -5
+          ls -la "$ANDROID_SDK_ROOT/platforms/"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
