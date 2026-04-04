@@ -19,30 +19,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup custom Android SDK
-        env:
-          ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
-        run: |
-          mkdir -p "$ANDROID_SDK_ROOT"
-          # Copy existing SDK except the corrupted platform
-          cp -rn "$ANDROID_HOME/"* "$ANDROID_SDK_ROOT/" 2>/dev/null || true
-          rm -rf "$ANDROID_SDK_ROOT/platforms/android-35"
-          rm -rf "$ANDROID_SDK_ROOT/build-tools/35.*"
-          # Find sdkmanager
-          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -f "$SDKMANAGER" ]; then
-            SDKMANAGER="$ANDROID_HOME/tools/bin/sdkmanager"
-          fi
-          echo "Using sdkmanager: $SDKMANAGER"
-          # Accept licenses and install android-35
-          yes | "$SDKMANAGER" --licenses 2>/dev/null || true
-          "$SDKMANAGER" --install "platforms;android-35" --sdk_root="$ANDROID_SDK_ROOT" 2>&1 | tail -5
-          ls -la "$ANDROID_SDK_ROOT/platforms/"
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.27.0'
           channel: 'stable'
           cache: true
 
