@@ -26,6 +26,12 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Clean Flutter build
+        run: |
+          flutter clean
+          rm -rf android/.gradle
+          rm -rf ~/.gradle/caches/transforms-*
+
       - name: Install dependencies
         run: flutter pub get
 
