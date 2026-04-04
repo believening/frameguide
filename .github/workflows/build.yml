@@ -19,22 +19,23 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Fix corrupted Android SDK
+      - name: Reinstall corrupted Android SDK 35
         run: |
           SDK_ROOT="$ANDROID_SDK_ROOT"
-          if [ -f "$SDK_ROOT/platforms/android-35/android.jar" ]; then
-            # Check if android-35 is corrupted
-            if ! unzip -t "$SDK_ROOT/platforms/android-35/android.jar" &>/dev/null; then
-              echo "Android SDK 35 is corrupted, removing..."
-              rm -rf "$SDK_ROOT/platforms/android-35"
-              rm -rf "$SDK_ROOT/build-tools/35.*"
-            fi
+          # Remove corrupted android-35
+          rm -rf "$SDK_ROOT/platforms/android-35"
+          rm -rf "$SDK_ROOT/build-tools/35.0.0"
+          # Find sdkmanager
+          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -f "$SDKMANAGER" ]; then
+            SDKMANAGER="$SDK_ROOT/tools/bin/sdkmanager"
           fi
-          # Ensure android-34 exists as fallback
-          if [ ! -d "$SDK_ROOT/platforms/android-34" ]; then
-            yes | "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-34" 2>/dev/null || \
-            yes | "$SDK_ROOT/tools/bin/sdkmanager" --install "platforms;android-34" 2>/dev/null || true
+          if [ ! -f "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find /opt -name sdkmanager 2>/dev/null | head -1)"
           fi
+          echo "Using sdkmanager: $SDKMANAGER"
+          # Reinstall android-35
+          yes | "$SDKMANAGER" --install "platforms;android-35" || echo "Failed to install android-35"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
