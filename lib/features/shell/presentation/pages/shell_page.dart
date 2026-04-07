@@ -13,7 +13,8 @@ class ShellPage extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
     if (location.startsWith('/camera')) return 0;
     if (location.startsWith('/gallery')) return 1;
-    if (location.startsWith('/settings')) return 2;
+    if (location.startsWith('/learn')) return 2;
+    if (location.startsWith('/settings')) return 3;
     return 0;
   }
 
@@ -26,6 +27,9 @@ class ShellPage extends StatelessWidget {
         context.go('/gallery');
         break;
       case 2:
+        context.go('/learn');
+        break;
+      case 3:
         context.go('/settings');
         break;
     }
@@ -64,10 +68,16 @@ class ShellPage extends StatelessWidget {
                   onTap: () => _onItemTapped(context, 1),
                 ),
                 _NavItem(
-                  icon: Icons.settings,
-                  label: '设置',
+                  icon: Icons.school,
+                  label: '学习',
                   isSelected: _calculateSelectedIndex(context) == 2,
                   onTap: () => _onItemTapped(context, 2),
+                ),
+                _NavItem(
+                  icon: Icons.settings,
+                  label: '设置',
+                  isSelected: _calculateSelectedIndex(context) == 3,
+                  onTap: () => _onItemTapped(context, 3),
                 ),
               ],
             ),

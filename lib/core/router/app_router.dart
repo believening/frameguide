@@ -7,6 +7,8 @@ import '../../features/camera/presentation/pages/camera_page.dart';
 import '../../features/gallery/presentation/pages/gallery_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/shell/presentation/pages/shell_page.dart';
+import '../../features/learn/presentation/pages/learn_page.dart';
+import '../../features/learn/presentation/pages/tip_detail_page.dart';
 
 /// Global camera controllers provider
 final availableCamerasProvider = FutureProvider<List<CameraDescription>>((ref) async {
@@ -33,10 +35,22 @@ final appRouter = GoRouter(
           builder: (context, state) => const GalleryPage(),
         ),
         GoRoute(
+          path: '/learn',
+          builder: (context, state) => const LearnPage(),
+        ),
+        GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsPage(),
         ),
       ],
+    ),
+    // Tip detail page outside shell (full screen)
+    GoRoute(
+      path: '/learn/tip/:id',
+      builder: (context, state) {
+        final tipId = state.pathParameters['id'] ?? '';
+        return TipDetailPage(tipId: tipId);
+      },
     ),
   ],
 );
