@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:camera/camera.dart';
 
-import '../../features/camera/presentation/pages/main_camera_page.dart';
+import '../../features/camera/presentation/pages/camera_page.dart';
 import '../../features/gallery/presentation/pages/gallery_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/shell/presentation/pages/shell_page.dart';
@@ -26,21 +26,15 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/camera',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: MainCameraPage(),
-          ),
+          builder: (context, state) => const MainCameraPage(),
         ),
         GoRoute(
           path: '/gallery',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: GalleryPage(),
-          ),
+          builder: (context, state) => const GalleryPage(),
         ),
         GoRoute(
           path: '/settings',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: SettingsPage(),
-          ),
+          builder: (context, state) => const SettingsPage(),
         ),
       ],
     ),
