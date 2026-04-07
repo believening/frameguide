@@ -1,48 +1,123 @@
+// Live guidance overlay - real-time composition match indicator
+
+import 'dart:async';
+import 'dart:io';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
+import '../../data/photographer_ai_service.dart';
+import '../../providers/camera_provider.dart';
 
-/// 实时构图微调指引覆盖层
-/// 当用户走到推荐位置后，叠加在画面上给出微调提示
-class LiveGuidanceOverlay extends StatelessWidget {
+class LiveGuidanceOverlay extends ConsumerStatefulWidget {
   const LiveGuidanceOverlay({super.key});
 
   @override
+  ConsumerState<LiveGuidanceOverlay> createState() => _LiveGuidanceState();
+}
+
+class _LiveGuidanceState extends ConsumerState<LiveGuidanceOverlay> {
+  CompositionAnalysis? _analysis;
+  bool _busy = false;
+  int _frames = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _begin();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _begin() {
+    try {
+      final cs = ref.read(cameraProvider);
+      if (cs.controller == null || !cs.isInitialized) return;
+
+      // Try real image stream on mobile
+      if (!Platform.isAndroid && !Platform.isIOS) {
+        _startMock();
+        return;
+      }
+
+      cs.controller!.startImageStream((img) {
+        if (_busy) return;
+        _frames++;
+        if (_frames % 20 != 0) return;
+        _busy = true;
+
+        // Use mock analysis for now (ML Kit integration can be enhanced later)
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            setState(() {
+              _analysis = ProfessionalPhotographerAI.analyze();
+            });
+          }
+          _busy = false;
+        });
+      });
+    } catch (e) {
+      _startMock();
+    }
+  }
+
+  void _startMock() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 3), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      setState(() {
+        _analysis = ProfessionalPhotographerAI.analyze();
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // TODO: 接入 ML Kit 人脸检测数据，显示实时构图匹配度
-    // 当前是占位 UI
-    return const SizedBox.shrink();
+    if (_analysis == null) return const SizedBox.shrink();
+
+    final score = _analysis!.score;
+    final pct = score / 100.0;
+    final tip = _analysis!.guidances.isNotEmpty
+        ? _analysis!.guidances.first.instruction
+        : null;
+
+    return MatchIndicator(pct: pct, tip: tip);
   }
 }
 
-/// 构图匹配度指示器
-class CompositionMatchIndicator extends StatelessWidget {
-  final double matchPercent; // 0.0 - 1.0
+/// Shows a composition match progress bar at the bottom of camera view
+class MatchIndicator extends StatelessWidget {
+  final double pct; // 0.0 - 1.0
   final String? tip;
 
-  const CompositionMatchIndicator({
-    super.key,
-    required this.matchPercent,
-    this.tip,
-  });
+  const MatchIndicator({super.key, required this.pct, this.tip});
 
-  Color get _color {
-    if (matchPercent >= 0.85) return AppColors.guidanceGood;
-    if (matchPercent >= 0.6) return AppColors.guidanceAdjusting;
+  Color get barColor {
+    if (pct >= 0.8) return AppColors.guidanceGood;
+    if (pct >= 0.6) return AppColors.guidanceAdjusting;
     return AppColors.guidanceFar;
   }
 
-  String get _label {
-    if (matchPercent >= 0.85) return '完美！可以拍了';
-    if (matchPercent >= 0.7) return '快到位了，微调一下';
-    if (matchPercent >= 0.5) return '还需要调整';
+  String get statusText {
+    if (pct >= 0.85) return '构图到位！可以拍了';
+    if (pct >= 0.7) return '快到位了，微调一下';
+    if (pct >= 0.5) return '还需要调整';
     return '距离目标较远';
   }
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 200,
+      bottom: 220,
       left: AppDimensions.spacingMd,
       right: AppDimensions.spacingMd,
       child: Container(
@@ -50,53 +125,67 @@ class CompositionMatchIndicator extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.overlayBackground,
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-          border: Border.all(color: _color.withOpacity(0.5)),
+          border: Border.all(color: barColor.withOpacity(0.4)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 进度条
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: matchPercent,
-                backgroundColor: Colors.white12,
-                color: _color,
-                minHeight: 6,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacingSm),
-            // 标签
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  _label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: _color,
-                    fontWeight: FontWeight.w500,
+                Icon(
+                  pct >= 0.8
+                      ? Icons.check_circle
+                      : pct >= 0.6
+                          ? Icons.trending_up
+                          : Icons.adjust,
+                  color: barColor,
+                  size: 18,
+                ),
+                const SizedBox(width: AppDimensions.spacingSm),
+                Expanded(
+                  child: Text(
+                    statusText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: barColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 Text(
-                  '${(matchPercent * 100).round()}%',
+                  '${(pct * 100).round()}%',
                   style: TextStyle(
-                    fontSize: 13,
-                    color: _color,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: barColor,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            // 微调提示
+            const SizedBox(height: AppDimensions.spacingSm),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: pct,
+                backgroundColor: Colors.white10,
+                color: barColor,
+                minHeight: 5,
+              ),
+            ),
             if (tip != null) ...[
-              const SizedBox(height: AppDimensions.spacingXs),
-              Text(
-                tip!,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
+              const SizedBox(height: AppDimensions.spacingSm),
+              Row(
+                children: [
+                  const Icon(Icons.subdirectory_arrow_right,
+                      color: Colors.white54, size: 14),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      tip!,
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                    ),
+                  ),
+                ],
               ),
             ],
           ],

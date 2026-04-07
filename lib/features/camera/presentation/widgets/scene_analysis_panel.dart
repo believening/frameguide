@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../models/scene_analysis.dart';
+import 'position_diagram.dart';
 
 /// 场景分析面板 - 显示场景信息和机位推荐
 class SceneAnalysisPanel extends StatelessWidget {
@@ -129,6 +130,15 @@ class _RecommendationCard extends StatelessWidget {
           // 头部：方案名 + 难度 + 翻页
           _buildHeader(),
           const Divider(height: 1, color: Colors.white10),
+          // 俯视方向示意图
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.zero,
+              bottomRight: Radius.zero,
+            ),
+            child: PositionDiagram(recommendation: recommendation),
+          ),
+          const Divider(height: 1, color: Colors.white10),
           // 内容
           Padding(
             padding: const EdgeInsets.all(AppDimensions.spacingMd),
@@ -139,17 +149,13 @@ class _RecommendationCard extends StatelessWidget {
                 _buildInfoRow(Icons.lightbulb_outline, recommendation.reason,
                     AppColors.accent),
                 const SizedBox(height: AppDimensions.spacingSm),
-                // 站位
+                // 站位 + 距离
                 _buildInfoRow(
-                    Icons.directions_walk, recommendation.position, Colors.white),
+                    Icons.directions_walk, '${recommendation.position} · ${recommendation.distance}', Colors.white),
                 const SizedBox(height: AppDimensions.spacingXs),
-                // 角度 + 高度
+                // 取景
                 _buildInfoRow(
-                    Icons.height, '${recommendation.angle} · ${recommendation.height}', Colors.white70),
-                const SizedBox(height: AppDimensions.spacingXs),
-                // 距离 + 取景
-                _buildInfoRow(
-                    Icons.straighten, '${recommendation.distance} · ${recommendation.framing}', Colors.white70),
+                    Icons.crop_free, recommendation.framing, Colors.white70),
                 // 专业提示
                 if (recommendation.proTip.isNotEmpty) ...[
                   const SizedBox(height: AppDimensions.spacingSm),
