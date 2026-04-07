@@ -57,11 +57,31 @@
 
 ---
 
-## Phase 4: 学习页 + 技巧库 🔜 待开始
+## Phase 4: 学习页 + 技巧库 ✅ 已完成
 
-- [ ] 拍摄技巧库（预设 20+ 场景技巧）
-- [ ] 技巧详情页（图示 + 文字）
-- [ ] 我的学习记录
+**提交:** `e4026a1` | **CI:** 🔄 进行中 | **日期:** 2026-04-07
+
+### 完成内容
+
+| 文件 | 说明 |
+|------|------|
+| `learn/data/tips_repository.dart` | 技巧数据（25个场景）+ 查询接口 |
+| `learn/models/shooting_tip.dart` | 数据模型 |
+| `learn/providers/learning_provider.dart` | 学习记录状态管理 |
+| `learn/presentation/pages/learn_page.dart` | 学习主页（技巧库 + 筛选） |
+| `learn/presentation/pages/tip_detail_page.dart` | 技巧详情页 |
+| `learn/presentation/widgets/tip_card.dart` | 技巧卡片组件 |
+| `learn/presentation/widgets/scene_filter_chips.dart` | 场景筛选标签 |
+| `learn/presentation/widgets/learning_stats_card.dart` | 学习统计卡片 |
+| `learn/widgets/position_diagram.dart` | 机位图示组件 |
+
+### 功能说明
+- 25 个预设拍摄技巧覆盖室内/户外/特殊场景/人像类型
+- 场景标签筛选
+- 技巧详情：机位图示 + 核心要点 + 焦距/光圈建议
+- 学习统计：拍摄数量 + 场景分布
+
+---
 
 ## Phase 5: 打磨 + 上线 🔜
 
@@ -69,3 +89,23 @@
 - [ ] 性能优化
 - [ ] 错误处理
 - [ ] App 图标和启动页
+
+---
+
+## Code Review 发现的问题（待处理）
+
+详见 `CODE_REVIEW.md`
+
+**P0 严重问题:**
+1. 两个同名 `MainCameraPage` 类导致编译冲突
+2. 重复的 `GuidanceDirection` / `CompositionAnalysis` 模型定义
+3. 图片"压缩"实际截断字节损坏图片
+4. Camera Controller 生命周期泄漏
+5. 静默用假数据掩盖错误
+
+**P1 应该修复:**
+6. 分辨率设置无效
+7. GLM 请求无超时
+8. API Key 明文存储
+9. 学习进度不持久化
+10. 缺少单元测试
