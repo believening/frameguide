@@ -63,11 +63,14 @@
 
 ---
 
-## Phase 3: 照片分析 + 相册 🔜 待开始
+## Phase 3: 照片分析 + 相册 🔨 进行中
 
 - [ ] 拍照后 AI 分析（调用 VisionAIService.analyzePhoto）
+- [ ] 照片存储（本地保存 + 分析元数据）
 - [ ] 相册页面重构（照片网格 + 构图评分标签）
-- [ ] 照片详情页（AI 分析报告 + 构图解析图）
+- [ ] 照片详情页（AI 分析报告 + 优缺点 + 改进建议）
+- [ ] GalleryProvider 状态管理
+- [ ] photo_storage.dart 数据层
 
 ## Phase 4: 学习页 + 技巧库 🔜
 

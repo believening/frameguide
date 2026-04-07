@@ -3,13 +3,12 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
-// ignore: unused_import
 import '../../models/scene_analysis.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/camera_provider.dart';
+import '../../../gallery/providers/gallery_provider.dart';
 import '../widgets/composition_overlay.dart';
 import '../widgets/scene_analysis_panel.dart';
 import '../widgets/live_guidance_overlay.dart';
@@ -89,24 +88,35 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
       final cameraState = ref.read(cameraProvider);
       if (cameraState.controller == null || !cameraState.isInitialized) return;
 
-      final directory = await getApplicationDocumentsDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final path = '${directory.path}/IMG_$timestamp.jpg';
-
       final xFile = await cameraState.controller!.takePicture();
-      await xFile.saveTo(path);
+      final bytes = await xFile.readAsBytes();
+      final takenAt = DateTime.now();
+
+      // Get scene type from current analysis if available
+      final analysisState = ref.read(analysisProvider);
+      final sceneType = analysisState.analysis?.scene.type;
+
+      // Save photo to gallery
+      final photo = await ref.read(galleryProvider.notifier).savePhoto(
+        bytes: bytes,
+        takenAt: takenAt,
+        sceneType: sceneType,
+        autoAnalyze: true,
+      );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('照片已保存'),
-            backgroundColor: AppColors.guidanceGood,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+        if (photo != null) {
+          // Show success message with analysis prompt
+          _showAnalysisSnackBar();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('照片保存失败'),
+              backgroundColor: AppColors.guidanceFar,
+              behavior: SnackBarBehavior.floating,
             ),
-          ),
-        );
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -122,6 +132,33 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
         setState(() => _isTakingPicture = false);
       }
     }
+  }
+
+  void _showAnalysisSnackBar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 12),
+            Text('照片已保存，正在 AI 分析...'),
+          ],
+        ),
+        backgroundColor: AppColors.guidanceGood,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+        ),
+      ),
+    );
   }
 
   void _toggleAnalysisPanel() {
