@@ -21,6 +21,10 @@ class AppColors {
   // Overlay
   static const Color overlayBackground = Color(0x80000000);
   static const Color gridLine = Color(0x80FFFFFF);
+
+  // Dividers and borders
+  static const Color divider = Color(0x1AFFFFFF); // 10% white
+  static const Color border = Color(0x33FFFFFF); // 20% white
 }
 
 /// Composition grid styles

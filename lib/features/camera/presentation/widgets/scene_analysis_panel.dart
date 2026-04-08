@@ -72,7 +72,7 @@ class _SceneInfoBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.overlayBackground,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: AppColors.divider),
       ),
       child: Row(
         children: [
@@ -129,7 +129,7 @@ class _RecommendationCard extends StatelessWidget {
         children: [
           // 头部：方案名 + 难度 + 翻页
           _buildHeader(),
-          const Divider(height: 1, color: Colors.white10),
+          const Divider(height: 1, color: AppColors.divider),
           // 俯视方向示意图
           ClipRRect(
             borderRadius: const BorderRadius.only(
@@ -138,7 +138,7 @@ class _RecommendationCard extends StatelessWidget {
             ),
             child: PositionDiagram(recommendation: recommendation),
           ),
-          const Divider(height: 1, color: Colors.white10),
+          const Divider(height: 1, color: AppColors.divider),
           // 内容
           Padding(
             padding: const EdgeInsets.all(AppDimensions.spacingMd),

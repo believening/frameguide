@@ -144,9 +144,9 @@ class TipCard extends StatelessWidget {
                 horizontal: AppDimensions.spacingMd,
                 vertical: AppDimensions.spacingSm,
               ),
-              decoration: const BoxDecoration(
-                color: Color(0xFF1A1A2E),
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(AppDimensions.radiusMd),
                   bottomRight: Radius.circular(AppDimensions.radiusMd),
                 ),

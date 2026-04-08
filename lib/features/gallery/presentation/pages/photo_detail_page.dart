@@ -111,7 +111,7 @@ class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
       decoration: const BoxDecoration(
         color: AppColors.secondary,
         border: Border(
-          top: BorderSide(color: Colors.white12, width: 0.5),
+          top: BorderSide(color: AppColors.divider),
         ),
       ),
       child: Column(
@@ -145,7 +145,7 @@ class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
       decoration: const BoxDecoration(
         color: AppColors.secondary,
         border: Border(
-          top: BorderSide(color: Colors.white12, width: 0.5),
+          top: BorderSide(color: AppColors.divider),
         ),
       ),
       child: SafeArea(
@@ -180,7 +180,7 @@ class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
       decoration: const BoxDecoration(
         color: AppColors.secondary,
         border: Border(
-          top: BorderSide(color: Colors.white12, width: 0.5),
+          top: BorderSide(color: AppColors.divider),
         ),
       ),
       child: SingleChildScrollView(

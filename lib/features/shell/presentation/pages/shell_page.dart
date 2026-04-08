@@ -44,7 +44,7 @@ class ShellPage extends StatelessWidget {
           color: AppColors.secondary,
           border: Border(
             top: BorderSide(
-              color: Colors.white12,
+              color: AppColors.divider,
               width: 0.5,
             ),
           ),

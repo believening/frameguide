@@ -31,11 +31,8 @@ class _PositionDiagramPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height * 0.65);
 
     // 背景
-    final bgPaint = Paint()..color = const Color(0xFF1A1A2E).withOpacity(0.8);
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      bgPaint,
-    );
+    final bgPaint = Paint()..color = AppColors.primary.withOpacity(0.8);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
     // 网格线
     final gridPaint = Paint()
@@ -53,18 +50,14 @@ class _PositionDiagramPainter extends CustomPainter {
       ..color = Colors.white.withOpacity(0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
-    final personFillPaint = Paint()
-      ..color = Colors.white.withOpacity(0.15);
-    
+    final personFillPaint = Paint()..color = Colors.white.withOpacity(0.15);
+
     canvas.drawCircle(center, 18, personPaint);
     canvas.drawCircle(center, 18, personFillPaint);
-    
+
     // 人物标签
     final personLabelPainter = TextPainter(
-      text: const TextSpan(
-        text: '👤',
-        style: TextStyle(fontSize: 16),
-      ),
+      text: const TextSpan(text: '👤', style: TextStyle(fontSize: 16)),
       textDirection: TextDirection.ltr,
     )..layout();
     personLabelPainter.paint(
@@ -95,8 +88,7 @@ class _PositionDiagramPainter extends CustomPainter {
     _drawDashedLine(canvas, shooterOffset, center, dashPaint);
 
     // 拍摄角度扇形
-    final anglePaint = Paint()
-      ..color = AppColors.accent.withOpacity(0.1);
+    final anglePaint = Paint()..color = AppColors.accent.withOpacity(0.1);
     final angleToCenter = atan2(
       center.dy - shooterOffset.dy,
       center.dx - shooterOffset.dx,
@@ -110,15 +102,11 @@ class _PositionDiagramPainter extends CustomPainter {
     );
 
     // 拍摄者位置（手机图标）
-    final shooterPaint = Paint()
-      ..color = AppColors.accent;
+    final shooterPaint = Paint()..color = AppColors.accent;
     canvas.drawCircle(shooterOffset, 12, shooterPaint);
-    
+
     final phonePainter = TextPainter(
-      text: const TextSpan(
-        text: '📱',
-        style: TextStyle(fontSize: 12),
-      ),
+      text: const TextSpan(text: '📱', style: TextStyle(fontSize: 12)),
       textDirection: TextDirection.ltr,
     )..layout();
     phonePainter.paint(
@@ -142,15 +130,14 @@ class _PositionDiagramPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    
+
     // 标签位置在拍摄方向线中点
     final midPoint = Offset(
       (shooterOffset.dx + center.dx) / 2,
       (shooterOffset.dy + center.dy) / 2 - 14,
     );
-    
-    final labelBgPaint = Paint()
-      ..color = const Color(0xFF1A1A2E).withOpacity(0.9);
+
+    final labelBgPaint = Paint()..color = AppColors.primary.withOpacity(0.9);
     final labelBgRect = RRect.fromRectAndRadius(
       Rect.fromCenter(
         center: midPoint,
@@ -170,29 +157,23 @@ class _PositionDiagramPainter extends CustomPainter {
     final distLabelPainter = TextPainter(
       text: TextSpan(
         text: rec.distance,
-        style: const TextStyle(
-          color: Colors.white70,
-          fontSize: 10,
-        ),
+        style: const TextStyle(color: Colors.white70, fontSize: 10),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
     distLabelPainter.paint(
       canvas,
-      Offset(center.dx - distLabelPainter.width / 2,
-          center.dy + 24),
+      Offset(center.dx - distLabelPainter.width / 2, center.dy + 24),
     );
   }
 
-  /// 解析拍摄者相对位置（归一化 -1 到 1）
   ({double dx, double dy}) _parseShooterPosition() {
     final pos = rec.position;
     final angle = rec.angle;
 
     double dx = 0;
-    double dy = -0.7; // 默认在人物前方（上方）
+    double dy = -0.7;
 
-    // 解析位置方向
     if (pos.contains('左前')) {
       dx = -0.5;
       dy = -0.6;
@@ -213,35 +194,30 @@ class _PositionDiagramPainter extends CustomPainter {
       dy = -0.8;
     }
 
-    // 俯拍/仰拍微调
     if (angle.contains('俯')) {
-      dy += 0.05; // 俯拍时稍近一些
+      dy += 0.05;
     } else if (angle.contains('仰')) {
-      dy -= 0.05; // 仰拍时稍远一些
+      dy -= 0.05;
     }
 
     return (dx: dx, dy: dy);
   }
 
-  /// 绘制高度指示器
   void _drawHeightIndicator(Canvas canvas, Size size, String height) {
     final x = size.width - 30;
-    final top = 20.0;
+    const top = 20.0;
     final bottom = size.height - 20.0;
     final mid = (top + bottom) / 2;
 
-    // 竖线
     final linePaint = Paint()
       ..color = Colors.white24
       ..strokeWidth = 1;
     canvas.drawLine(Offset(x, top), Offset(x, bottom), linePaint);
 
-    // 刻度
     for (final y in [top, mid, bottom]) {
       canvas.drawLine(Offset(x - 4, y), Offset(x + 4, y), linePaint);
     }
 
-    // 当前高度标记
     double markY;
     String label;
     if (height.contains('举高') || height.contains('过头顶')) {
@@ -271,17 +247,15 @@ class _PositionDiagramPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    heightPainter.paint(
-      canvas,
-      Offset(x - heightPainter.width / 2, markY - 16),
-    );
+    heightPainter.paint(canvas, Offset(x - heightPainter.width / 2, markY - 16));
   }
 
-  /// 绘制虚线
   void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
     const dashLength = 6.0;
     const gapLength = 4.0;
     final totalDistance = (end - start).distance;
+    if (totalDistance == 0) return;
+
     final dx = (end.dx - start.dx) / totalDistance;
     final dy = (end.dy - start.dy) / totalDistance;
 
