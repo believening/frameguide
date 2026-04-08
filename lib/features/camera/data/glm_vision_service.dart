@@ -103,7 +103,7 @@ class GlmVisionService implements VisionAIService {
         'temperature': 0.7,
         'max_tokens': 2048,
       }),
-    );
+    ).timeout(const Duration(seconds: 30));
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -149,7 +149,7 @@ class GlmVisionService implements VisionAIService {
         'temperature': 0.7,
         'max_tokens': 1024,
       }),
-    );
+    ).timeout(const Duration(seconds: 30));
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -179,7 +179,7 @@ class GlmVisionService implements VisionAIService {
           ],
           'max_tokens': 10,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
       return response.statusCode == 200;
     } catch (_) {
       return false;

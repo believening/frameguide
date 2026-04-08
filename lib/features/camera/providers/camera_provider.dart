@@ -53,6 +53,14 @@ class CameraNotifier extends StateNotifier<CameraState> {
     await _setupCamera();
   }
 
+  /// 重置相机状态（生命周期变化时使用）
+  void resetCamera() {
+    // 释放现有 controller
+    state.controller?.dispose();
+    // 重置状态，避免持有已释放的 controller 引用
+    state = const CameraState(isFrontCamera: true);
+  }
+
   Future<void> _setupCamera() async {
     if (_cameras.isEmpty) {
       state = state.copyWith(error: 'No cameras available');
@@ -69,9 +77,13 @@ class CameraNotifier extends StateNotifier<CameraState> {
             orElse: () => _cameras.first,
           );
 
+    // 获取用户配置的分辨率设置
+    final resolution = ref.read(cameraResolutionProvider);
+    final preset = resolution.resolutionPreset;
+
     final controller = CameraController(
       camera,
-      ResolutionPreset.high,
+      preset,
       enableAudio: false,
     );
 
@@ -134,7 +146,7 @@ extension CameraResolutionExtension on CameraResolution {
       case CameraResolution.high:
         return '高 (1080p)';
       case CameraResolution.veryHigh:
-        return '超高 (4K)';
+        return '最高 (max)';
     }
   }
 
@@ -148,6 +160,20 @@ extension CameraResolutionExtension on CameraResolution {
         return '推荐画质';
       case CameraResolution.veryHigh:
         return '最佳画质';
+    }
+  }
+
+  /// 映射到 CameraController 的 ResolutionPreset
+  ResolutionPreset get resolutionPreset {
+    switch (this) {
+      case CameraResolution.low:
+        return ResolutionPreset.low;
+      case CameraResolution.medium:
+        return ResolutionPreset.medium;
+      case CameraResolution.high:
+        return ResolutionPreset.high;
+      case CameraResolution.veryHigh:
+        return ResolutionPreset.max;
     }
   }
 }

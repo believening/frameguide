@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/tips_repository.dart';
 
 /// 学习记录状态
@@ -26,12 +28,44 @@ class LearningRecord {
   }
 }
 
-/// 学习记录状态管理
+/// 学习记录状态管理（持久化到 SharedPreferences）
 class LearningNotifier extends StateNotifier<LearningRecord> {
-  LearningNotifier() : super(const LearningRecord());
+  static const _keyLearnedTips = 'learned_tip_ids';
+  static const _keySceneStats = 'scene_stats';
+  static const _keyTotalShoots = 'total_shoots';
+
+  LearningNotifier() : super(const LearningRecord()) {
+    _loadFromPrefs();
+  }
+
+  Future<void> _loadFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final learnedIds = prefs.getStringList(_keyLearnedTips) ?? [];
+    final sceneStatsJson = prefs.getString(_keySceneStats);
+    final totalShoots = prefs.getInt(_keyTotalShoots) ?? 0;
+
+    Map<String, int> sceneStats = {};
+    if (sceneStatsJson != null) {
+      final decoded = jsonDecode(sceneStatsJson) as Map<String, dynamic>;
+      sceneStats = decoded.map((k, v) => MapEntry(k, v as int));
+    }
+
+    state = LearningRecord(
+      learnedTipIds: Set<String>.from(learnedIds),
+      sceneStats: sceneStats,
+      totalShoots: totalShoots,
+    );
+  }
+
+  Future<void> _saveToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_keyLearnedTips, state.learnedTipIds.toList());
+    await prefs.setString(_keySceneStats, jsonEncode(state.sceneStats));
+    await prefs.setInt(_keyTotalShoots, state.totalShoots);
+  }
 
   /// 标记技巧为已学习
-  void markTipAsLearned(String tipId, String sceneTag) {
+  Future<void> markTipAsLearned(String tipId, String sceneTag) async {
     final newLearnedIds = Set<String>.from(state.learnedTipIds)..add(tipId);
     final newStats = Map<String, int>.from(state.sceneStats);
     newStats[sceneTag] = (newStats[sceneTag] ?? 0) + 1;
@@ -40,10 +74,11 @@ class LearningNotifier extends StateNotifier<LearningRecord> {
       learnedTipIds: newLearnedIds,
       sceneStats: newStats,
     );
+    await _saveToPrefs();
   }
 
   /// 增加拍摄次数
-  void incrementShootCount(String sceneTag) {
+  Future<void> incrementShootCount(String sceneTag) async {
     final newStats = Map<String, int>.from(state.sceneStats);
     newStats[sceneTag] = (newStats[sceneTag] ?? 0) + 1;
     
@@ -51,6 +86,7 @@ class LearningNotifier extends StateNotifier<LearningRecord> {
       totalShoots: state.totalShoots + 1,
       sceneStats: newStats,
     );
+    await _saveToPrefs();
   }
 
   /// 检查技巧是否已学习
@@ -87,8 +123,12 @@ class LearningNotifier extends StateNotifier<LearningRecord> {
   }
 
   /// 重置学习记录
-  void reset() {
+  Future<void> reset() async {
     state = const LearningRecord();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyLearnedTips);
+    await prefs.remove(_keySceneStats);
+    await prefs.remove(_keyTotalShoots);
   }
 }
 

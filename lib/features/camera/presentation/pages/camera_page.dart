@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../models/scene_analysis.dart';
@@ -13,7 +13,8 @@ import '../widgets/composition_overlay.dart';
 import '../widgets/scene_analysis_panel.dart';
 import '../widgets/live_guidance_overlay.dart';
 
-/// 主相机页面 - v2 重构
+/// 主相机页面 - v2 重构版
+/// 使用 SceneAnalysis + AI 服务分析场景，给出机位推荐
 class MainCameraPage extends ConsumerStatefulWidget {
   const MainCameraPage({super.key});
 
@@ -47,7 +48,9 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
     if (cameraState.controller == null || !cameraState.isInitialized) return;
 
     if (state == AppLifecycleState.inactive) {
+      // 暂停时释放 controller，但先重置状态避免使用已释放的 controller
       cameraState.controller?.dispose();
+      ref.read(cameraProvider.notifier).resetCamera();
     } else if (state == AppLifecycleState.resumed) {
       _initCamera();
     }
@@ -62,7 +65,10 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
   /// 截取当前画面并让 AI 分析场景
   Future<void> _captureAndAnalyze() async {
     final cameraState = ref.read(cameraProvider);
-    if (cameraState.controller == null || !cameraState.isInitialized) return;
+    if (cameraState.controller == null || !cameraState.isInitialized) {
+      _showError('相机未就绪');
+      return;
+    }
 
     try {
       // 截帧
@@ -72,11 +78,24 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
       // 发给 AI 分析
       ref.read(analysisProvider.notifier).analyzeFromImage(bytes);
     } catch (e) {
-      // 截帧失败时使用 Mock 分析
-      debugPrint('截帧失败，使用 Mock: $e');
-      final mockBytes = Uint8List(100);
-      ref.read(analysisProvider.notifier).analyzeFromImage(mockBytes);
+      // 显示错误，而不是静默用假数据
+      _showError('无法截取画面: $e');
+      debugPrint('截帧失败: $e');
     }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.guidanceFar,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+        ),
+      ),
+    );
   }
 
   Future<void> _takePicture() async {
@@ -86,7 +105,10 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
 
     try {
       final cameraState = ref.read(cameraProvider);
-      if (cameraState.controller == null || !cameraState.isInitialized) return;
+      if (cameraState.controller == null || !cameraState.isInitialized) {
+        _showError('相机未就绪');
+        return;
+      }
 
       final xFile = await cameraState.controller!.takePicture();
       final bytes = await xFile.readAsBytes();
@@ -106,26 +128,14 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
 
       if (mounted) {
         if (photo != null) {
-          // Show success message with analysis prompt
           _showAnalysisSnackBar();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('照片保存失败'),
-              backgroundColor: AppColors.guidanceFar,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          _showError('照片保存失败');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('拍照失败: $e'),
-            backgroundColor: AppColors.guidanceFar,
-          ),
-        );
+        _showError('拍照失败: $e');
       }
     } finally {
       if (mounted) {

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image/image.dart' as img;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/vision_ai_service.dart';
 import '../data/glm_vision_service.dart';
@@ -173,16 +174,36 @@ class AnalysisNotifier extends StateNotifier<AnalysisState> {
     state = const AnalysisState();
   }
 
-  /// 简单压缩：如果图片太大就截取部分
+  /// 压缩图片：解码后 resize 到合理尺寸，再编码为 JPEG
+  /// 避免字节截断导致图片损坏
   Uint8List _compressImage(Uint8List bytes) {
-    // 超过 2MB 就做简单截断（实际项目中应该用 flutter_image_compress）
-    const maxSize = 2 * 1024 * 1024; // 2MB
-    if (bytes.length > maxSize) {
-      // 截取前 2MB（JPEG 即使截断也能部分识别）
-      // 更好的做法是用 image 包做 resize
-      return bytes.sublist(0, maxSize);
+    const maxWidth = 1280; // 最大宽度 1280px
+    const quality = 85; // JPEG 质量
+
+    try {
+      final image = img.decodeImage(bytes);
+      if (image == null) return bytes;
+
+      // 如果图片宽度已经小于最大宽度，直接返回原图（做质量压缩）
+      if (image.width <= maxWidth) {
+        return Uint8List.fromList(img.encodeJpg(image, quality: quality));
+      }
+
+      // 按比例 resize
+      final ratio = maxWidth / image.width;
+      final resized = img.copyResize(
+        image,
+        width: maxWidth,
+        height: (image.height * ratio).round(),
+        interpolation: img.Interpolation.linear,
+      );
+
+      return Uint8List.fromList(img.encodeJpg(resized, quality: quality));
+    } catch (e) {
+      // 解码失败时回退到原图（不做截断）
+      debugPrint('图片压缩失败，使用原图: $e');
+      return bytes;
     }
-    return bytes;
   }
 }
 
