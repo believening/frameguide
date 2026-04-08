@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../camera/models/scene_analysis.dart';
 
@@ -145,46 +146,54 @@ class PhotoStorage {
   }
 
   /// Load all saved photos (sorted by time descending)
+  /// 
+  /// 容错：单张照片解析失败不影响整体加载
   Future<List<SavedPhoto>> loadAllPhotos() async {
-    final dir = await _photosDir;
-    if (!await dir.exists()) {
+    try {
+      final dir = await _photosDir;
+      if (!await dir.exists()) {
+        return [];
+      }
+
+      final files = await dir.list().where((entity) {
+        return entity is File && entity.path.endsWith(_photoExtension);
+      }).toList();
+
+      final photos = <SavedPhoto>[];
+      for (final file in files) {
+        try {
+          final metaPath = file.path.replaceFirst(_photoExtension, _metaExtension);
+          final metaFile = File(metaPath);
+
+          if (await metaFile.exists()) {
+            final json = jsonDecode(await metaFile.readAsString());
+            photos.add(SavedPhoto.fromJson(json));
+          } else {
+            // 从文件信息重建元数据
+            final stat = await File(file.path).stat();
+            final id = file.path
+                .split('/')
+                .last
+                .replaceFirst(_photoExtension, '');
+            photos.add(SavedPhoto(
+              id: id,
+              filePath: file.path,
+              takenAt: stat.modified,
+            ));
+          }
+        } catch (e) {
+          // 单张照片解析失败，跳过继续
+          debugPrint('跳过损坏的照片元数据: $e');
+        }
+      }
+
+      // 按时间降序排列（最新在前）
+      photos.sort((a, b) => b.takenAt.compareTo(a.takenAt));
+      return photos;
+    } catch (e) {
+      debugPrint('加载照片失败: $e');
       return [];
     }
-
-    final files = await dir.list().where((entity) {
-      return entity is File && entity.path.endsWith(_photoExtension);
-    }).toList();
-
-    final photos = <SavedPhoto>[];
-    for (final file in files) {
-      final metaPath = file.path.replaceFirst(_photoExtension, _metaExtension);
-      final metaFile = File(metaPath);
-
-      if (await metaFile.exists()) {
-        try {
-          final json = jsonDecode(await metaFile.readAsString());
-          photos.add(SavedPhoto.fromJson(json));
-        } catch (_) {
-          // Skip corrupted metadata
-        }
-      } else {
-        // Try to create metadata from file stats
-        final stat = await File(file.path).stat();
-        final id = file.path
-            .split('/')
-            .last
-            .replaceFirst(_photoExtension, '');
-        photos.add(SavedPhoto(
-          id: id,
-          filePath: file.path,
-          takenAt: stat.modified,
-        ));
-      }
-    }
-
-    // Sort by taken time descending (newest first)
-    photos.sort((a, b) => b.takenAt.compareTo(a.takenAt));
-    return photos;
   }
 
   /// Update photo metadata (e.g., after AI analysis)

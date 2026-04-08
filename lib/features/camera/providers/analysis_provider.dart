@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/storage/secure_storage.dart';
 import '../data/vision_ai_service.dart';
 import '../data/glm_vision_service.dart';
 import '../data/mock_vision_service.dart';
@@ -70,22 +71,32 @@ class AIServiceConfig {
   }
 }
 
-/// AI 配置 Provider（持久化到 SharedPreferences）
+/// AI 配置 Provider（API Key 加密存储，其余 SharedPreferences）
 class AIServiceConfigNotifier extends StateNotifier<AIServiceConfig> {
   static const _keyProvider = 'ai_provider';
-  static const _keyApiKey = 'ai_api_key';
+  static const _keyApiKey = 'ai_api_key'; // secure storage key
   static const _keyBaseUrl = 'ai_base_url';
   static const _keyModel = 'ai_model';
+
+  SecureStorageInterface? _secureStorage;
 
   AIServiceConfigNotifier() : super(const AIServiceConfig()) {
     _loadConfig();
   }
 
+  Future<SecureStorageInterface> _getSecureStorage() async {
+    return _secureStorage ??= await getSecureStorage();
+  }
+
   Future<void> _loadConfig() async {
     final prefs = await SharedPreferences.getInstance();
+    // API Key 从安全存储读取
+    final secureStorage = await _getSecureStorage();
+    final apiKey = await secureStorage.read(_keyApiKey) ?? '';
+
     state = AIServiceConfig(
       provider: AIProvider.fromId(prefs.getString(_keyProvider) ?? 'mock'),
-      apiKey: prefs.getString(_keyApiKey) ?? '',
+      apiKey: apiKey,
       baseUrl: prefs.getString(_keyBaseUrl) ?? 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
       model: prefs.getString(_keyModel) ?? 'glm-4v-flash',
     );
@@ -93,8 +104,11 @@ class AIServiceConfigNotifier extends StateNotifier<AIServiceConfig> {
 
   Future<void> updateConfig(AIServiceConfig config) async {
     final prefs = await SharedPreferences.getInstance();
+    // API Key 写入安全存储
+    final secureStorage = await _getSecureStorage();
+    await secureStorage.write(_keyApiKey, config.apiKey);
+    // 其余配置写入 SharedPreferences
     await prefs.setString(_keyProvider, config.provider.id);
-    await prefs.setString(_keyApiKey, config.apiKey);
     await prefs.setString(_keyBaseUrl, config.baseUrl);
     await prefs.setString(_keyModel, config.model);
     state = config;
