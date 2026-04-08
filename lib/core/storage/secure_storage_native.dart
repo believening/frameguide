@@ -1,4 +1,5 @@
 export 'secure_storage_interface.dart';
+import 'secure_storage_interface.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// flutter_secure_storage 实现（移动端加密存储）
