@@ -106,8 +106,41 @@
 
 ### 待处理
 
-- [ ] API Key 安全存储（`flutter_secure_storage`）
-- [ ] 单元测试
+- [ ] ~~API Key 安全存储（`flutter_secure_storage`）~~ ✅ 已完成
+- [ ] ~~单元测试~~ 暂搁置
+
+---
+
+## 技术债 + 稳定性 + 性能 优化 ✅ 已完成 (2026-04-08)
+
+**提交:** `97bf9db` | **CI:** ✅ 通过
+
+### 死代码清理 (-1320 行)
+| 文件 | 原因 |
+|------|------|
+| `mock_ai_service.dart` | 从未被 import |
+| `ml_composition_analyzer*.dart` (4个) | 写了但从未接入 |
+| `professional_guidance_overlay.dart` | 未被引用 |
+
+### 性能优化
+| 优化 | 说明 |
+|------|------|
+| AI 分析 debounce | 3s 冷却，防止连点 |
+| Gallery savePhoto | 前插新照片，不重载全部 |
+| Gallery analyzePhoto | 就地更新单张，不重载全部 |
+| Gallery deletePhoto | 列表移除，不重载全部 |
+
+### 安全
+| 安全 | 说明 |
+|------|------|
+| API Key 加密存储 | 移动端用 flutter_secure_storage，Web 回退 SharedPreferences |
+| 条件导入 | `dart.library.io` 分平台实现 |
+
+### 稳定性
+| 稳定性 | 说明 |
+|------|------|
+| PhotoStorage 容错 | 单张解析失败不阻塞整体加载 |
+| 全局 try-catch | loadAllPhotos 外层兜底 |
 - [ ] UI/UX 统一打磨
 - [ ] App 图标和启动页
 
