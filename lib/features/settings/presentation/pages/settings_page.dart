@@ -4,8 +4,6 @@ import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../../camera/providers/analysis_provider.dart';
 import '../../../camera/providers/camera_provider.dart';
-// ignore: unused_import
-import '../../../camera/presentation/widgets/composition_overlay.dart';
 
 /// 设置页面
 class SettingsPage extends ConsumerStatefulWidget {

@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../models/scene_analysis.dart';
@@ -27,6 +27,8 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
   bool _isTakingPicture = false;
   bool _showAnalysisPanel = true;
   Timer? _autoHideTimer;
+  DateTime? _lastAnalyzeTime;
+  static const _analyzeDebounce = Duration(seconds: 3);
 
   @override
   void initState() {
@@ -64,6 +66,15 @@ class _MainCameraPageState extends ConsumerState<MainCameraPage>
 
   /// 截取当前画面并让 AI 分析场景
   Future<void> _captureAndAnalyze() async {
+    // 防抖：3 秒内不重复分析
+    final now = DateTime.now();
+    if (_lastAnalyzeTime != null &&
+        now.difference(_lastAnalyzeTime!) < _analyzeDebounce) {
+      _showError('分析太频繁，请稍后再试');
+      return;
+    }
+    _lastAnalyzeTime = now;
+
     final cameraState = ref.read(cameraProvider);
     if (cameraState.controller == null || !cameraState.isInitialized) {
       _showError('相机未就绪');

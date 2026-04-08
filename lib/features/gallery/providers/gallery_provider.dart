@@ -79,8 +79,11 @@ class GalleryNotifier extends StateNotifier<GalleryState> {
         sceneType: sceneType,
       );
 
-      // Reload photos
-      await loadPhotos();
+      // 把新照片加到列表头部（不重载全部）
+      state = state.copyWith(
+        photos: [photo, ...state.photos],
+        status: GalleryStatus.loaded,
+      );
 
       // Auto-analyze if requested
       if (autoAnalyze) {
@@ -97,7 +100,7 @@ class GalleryNotifier extends StateNotifier<GalleryState> {
     }
   }
 
-  /// Analyze a single photo with AI
+  /// Analyze a single photo with AI (不重载全部照片，只更新当前照片)
   Future<void> analyzePhoto(SavedPhoto photo) async {
     state = state.copyWith(status: GalleryStatus.analyzing);
 
@@ -113,8 +116,14 @@ class GalleryNotifier extends StateNotifier<GalleryState> {
       final updatedPhoto = photo.copyWith(analysis: analysis);
       await _storage.updatePhotoMetadata(updatedPhoto);
 
-      // Reload photos
-      await loadPhotos();
+      // 只更新列表中对应的那张照片，不重载全部
+      final updatedPhotos = state.photos.map((p) {
+        return p.id == updatedPhoto.id ? updatedPhoto : p;
+      }).toList();
+      state = state.copyWith(
+        photos: updatedPhotos,
+        status: GalleryStatus.loaded,
+      );
     } catch (e) {
       state = state.copyWith(
         status: GalleryStatus.error,
@@ -123,11 +132,13 @@ class GalleryNotifier extends StateNotifier<GalleryState> {
     }
   }
 
-  /// Delete a photo
+  /// Delete a photo (不重载全部，只从列表移除)
   Future<void> deletePhoto(SavedPhoto photo) async {
     try {
       await _storage.deletePhoto(photo);
-      await loadPhotos();
+      // 从列表中移除，不重载全部
+      final updatedPhotos = state.photos.where((p) => p.id != photo.id).toList();
+      state = state.copyWith(photos: updatedPhotos);
     } catch (e) {
       state = state.copyWith(
         status: GalleryStatus.error,
