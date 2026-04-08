@@ -83,11 +83,32 @@
 
 ---
 
-## Phase 5: 打磨 + 上线 🔜
+## Phase 5: 打磨 + 上线 🔄 进行中
 
+**提交:** `3d07c8e` | **CI:** ✅ 通过 | **日期:** 2026-04-08
+
+### P0 已修复 ✅
+
+| 问题 | 修复 |
+|------|------|
+| 两个同名 `MainCameraPage` 类 | 删除旧类 + `main_camera_page.dart` |
+| 图片"压缩"截断损坏图片 | 改用 `image` 包做真正 resize |
+| Camera Controller 生命周期泄漏 | 添加 `resetCamera()` |
+| 静默假数据掩盖错误 | 显示用户错误提示 |
+
+### P1 已修复 ✅
+
+| 问题 | 修复 |
+|------|------|
+| 分辨率设置无效 | 映射到 `ResolutionPreset` |
+| GLM 请求无超时 | 添加 30s timeout |
+| 学习进度不持久化 | SharedPreferences 持久化 |
+
+### 待处理
+
+- [ ] API Key 安全存储（`flutter_secure_storage`）
+- [ ] 单元测试
 - [ ] UI/UX 统一打磨
-- [ ] 性能优化
-- [ ] 错误处理
 - [ ] App 图标和启动页
 
 ---

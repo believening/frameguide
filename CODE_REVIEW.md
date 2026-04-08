@@ -6,6 +6,32 @@
 
 ---
 
+## 状态汇总
+
+### ✅ P0 已修复 (2026-04-08)
+
+| # | 问题 | 修复方案 |
+|---|------|---------|
+| 1 | 两个同名 `MainCameraPage` 类 | 删除旧类和 `main_camera_page.dart` |
+| 2 | `GuidanceDirection`/`CompositionAnalysis` 重复 | 保留 `photographer_ai_service.dart`（`LiveGuidanceOverlay` 仍依赖） |
+| 3 | 图片截断"压缩" | 改用 `image` 包做真正 resize + JPEG 压缩 |
+| 4 | Camera Controller 生命周期泄漏 | 添加 `resetCamera()` 方法 |
+| 5 | 假数据掩盖错误 | 改为显示用户错误提示 |
+
+### ✅ P1 已修复 (2026-04-08)
+
+| # | 问题 | 修复方案 |
+|---|------|---------|
+| 6 | 分辨率设置无效 | 映射 `CameraResolution` → `ResolutionPreset` |
+| 7 | GLM 请求无超时 | 添加 30s timeout |
+| 8 | API Key 明文存储 | 待处理（需要 `flutter_secure_storage`）|
+| 9 | 学习进度不持久化 | SharedPreferences 持久化 |
+| 10 | 缺少单元测试 | 待处理 |
+
+---
+
+---
+
 ## 一、项目概览
 
 FrameGuide 是一个 AI 驱动的人像摄影指导 Flutter 应用，使用 Riverpod 状态管理 + go_router 路由 + ML Kit 本地分析 + GLM-4V 云端 AI。功能模块：相机、相册、学习、设置。
