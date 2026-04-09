@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frame_guide/core/widgets/error_view.dart';
 import '../../camera/providers/analysis_provider.dart';
-import '../../camera/models/scene_analysis.dart';
 import '../data/photo_storage.dart';
 
 /// Gallery state
@@ -60,7 +60,7 @@ class GalleryNotifier extends StateNotifier<GalleryState> {
     } catch (e) {
       state = state.copyWith(
         status: GalleryStatus.error,
-        error: e.toString(),
+        error: AppErrorHandler.userMessage(e),
       );
     }
   }
@@ -94,7 +94,7 @@ class GalleryNotifier extends StateNotifier<GalleryState> {
     } catch (e) {
       state = state.copyWith(
         status: GalleryStatus.error,
-        error: e.toString(),
+        error: AppErrorHandler.userMessage(e),
       );
       return null;
     }
@@ -127,7 +127,7 @@ class GalleryNotifier extends StateNotifier<GalleryState> {
     } catch (e) {
       state = state.copyWith(
         status: GalleryStatus.error,
-        error: e.toString(),
+        error: AppErrorHandler.userMessage(e),
       );
     }
   }
@@ -142,7 +142,7 @@ class GalleryNotifier extends StateNotifier<GalleryState> {
     } catch (e) {
       state = state.copyWith(
         status: GalleryStatus.error,
-        error: e.toString(),
+        error: AppErrorHandler.userMessage(e),
       );
     }
   }

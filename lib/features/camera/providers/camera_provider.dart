@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
+import 'package:frame_guide/core/widgets/error_view.dart';
 import '../../../core/constants/colors.dart';
 
 /// Camera state
@@ -95,7 +96,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
         error: null,
       );
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: AppErrorHandler.userMessage(e));
     }
   }
 

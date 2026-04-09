@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/colors.dart';
-import '../../../../core/constants/dimensions.dart';
+import 'package:frame_guide/core/constants/colors.dart';
+import 'package:frame_guide/core/constants/dimensions.dart';
+import 'package:frame_guide/core/widgets/error_view.dart';
 import '../../providers/gallery_provider.dart';
 import '../../data/photo_storage.dart';
-import 'photo_detail_page.dart';
 
 /// Gallery page showing captured photos in a grid
 class GalleryPage extends ConsumerWidget {
@@ -56,46 +56,9 @@ class GalleryPage extends ConsumerWidget {
   }
 
   Widget _buildErrorState(BuildContext context, WidgetRef ref, String? error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.spacingXl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              color: AppColors.guidanceFar,
-              size: 48,
-            ),
-            const SizedBox(height: AppDimensions.spacingLg),
-            const Text(
-              '加载失败',
-              style: TextStyle(
-                fontSize: 18,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacingSm),
-            Text(
-              error ?? '未知错误',
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimensions.spacingLg),
-            ElevatedButton(
-              onPressed: () => ref.read(galleryProvider.notifier).loadPhotos(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: AppColors.primary,
-              ),
-              child: const Text('重试'),
-            ),
-          ],
-        ),
-      ),
+    return ErrorView(
+      message: error ?? '加载失败',
+      onRetry: () => ref.read(galleryProvider.notifier).loadPhotos(),
     );
   }
 

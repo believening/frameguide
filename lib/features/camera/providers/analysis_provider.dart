@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frame_guide/core/widgets/error_view.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../data/vision_ai_service.dart';
 import '../data/glm_vision_service.dart';
@@ -150,7 +151,7 @@ class AnalysisNotifier extends StateNotifier<AnalysisState> {
     } catch (e) {
       state = state.copyWith(
         status: AnalysisStatus.error,
-        error: e.toString(),
+        error: AppErrorHandler.userMessage(e),
       );
     }
   }
