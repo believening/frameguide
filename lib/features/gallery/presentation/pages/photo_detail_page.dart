@@ -115,14 +115,27 @@ class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
   }
 
   Widget _buildAnalysisSection() {
-    // Watch for gallery state changes to update photo
+    // Watch gallery for changes to this photo's analysis using select
+    // This only triggers rebuild when the specific photo's analysis changes
     ref.listen<GalleryState>(galleryProvider, (prev, next) {
       if (_photo == null) return;
-      final updated = next.photos.where((p) => p.id == _photo!.id).firstOrNull;
-      if (updated != null && updated.analysis != _photo!.analysis) {
-        setState(() {
-          _photo = updated;
-        });
+      final prevAnalysis = prev?.photos
+          .where((p) => p.id == _photo!.id)
+          .firstOrNull
+          ?.analysis;
+      final nextAnalysis = next.photos
+          .where((p) => p.id == _photo!.id)
+          .firstOrNull
+          ?.analysis;
+      if (nextAnalysis != prevAnalysis) {
+        final updatedPhoto = next.photos
+            .where((p) => p.id == _photo!.id)
+            .firstOrNull;
+        if (updatedPhoto != null) {
+          setState(() {
+            _photo = updatedPhoto;
+          });
+        }
       }
     });
 
