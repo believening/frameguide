@@ -146,20 +146,52 @@
 
 ---
 
-## Code Review 发现的问题（待处理）
+## P2 建议改进 ✅ 已完成 (2026-04-09)
+
+**CI:** ✅ 通过
+
+### P2-11: 国际化支持 ✅
+| 改动 | 说明 |
+|------|------|
+| flutter_localizations | 添加依赖 |
+| l10n.yaml | 配置 ARB 文件路径 |
+| app_zh.arb | 80+ 中文翻译 key |
+| app_en.arb | 80+ 英文翻译 key |
+| main.dart | 集成 localization delegates |
+
+### P2-12: PositionDiagram 重复合并 ✅
+| 改动 | 说明 |
+|------|------|
+| core/widgets/position_diagram.dart | 统一组件 |
+| camera scene_analysis_panel | 使用统一组件 |
+| learn tip_detail_page | 使用统一组件 + 解析器 |
+| 删除 2 个重复文件 | -51 行 |
+
+### P2-13: ref.listen 优化 ✅
+| 改动 | 说明 |
+|------|------|
+| photo_detail_page | 只在 analysis 变化时 setState |
+
+### P2-14: 无障碍支持 ✅
+| 改动 | 说明 |
+|------|------|
+| camera_page | 快门/面板/切换按钮 Semantics |
+| gallery_page | 照片网格 Semantics 标签 |
+
+### P2-15: 错误处理统一 ✅
+| 改动 | 说明 |
+|------|------|
+| error_view.dart | ErrorView + AppErrorHandler |
+| gallery_provider | userMessage 替换 e.toString() |
+| camera_provider | userMessage 替换 e.toString() |
+| analysis_provider | userMessage 替换 e.toString() |
+
+---
+
+## Code Review 发现的问题
 
 详见 `CODE_REVIEW.md`
 
-**P0 严重问题:**
-1. 两个同名 `MainCameraPage` 类导致编译冲突
-2. 重复的 `GuidanceDirection` / `CompositionAnalysis` 模型定义
-3. 图片"压缩"实际截断字节损坏图片
-4. Camera Controller 生命周期泄漏
-5. 静默用假数据掩盖错误
-
-**P1 应该修复:**
-6. 分辨率设置无效
-7. GLM 请求无超时
-8. API Key 明文存储
-9. 学习进度不持久化
-10. 缺少单元测试
+**P0 严重问题:** ✅ 已全部修复
+**P1 应该修复:** ✅ 已全部修复
+**P2 建议改进:** ✅ 已全部修复
