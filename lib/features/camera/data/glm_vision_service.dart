@@ -72,94 +72,98 @@ class GlmVisionService implements VisionAIService {
 
   @override
   Future<SceneAnalysis> analyzeScene(Uint8List imageBytes) async {
-    final base64Image = base64Encode(imageBytes);
-    final mimeType = _inferMimeType(imageBytes);
+    return _withRetry(() async {
+      final base64Image = base64Encode(imageBytes);
+      final mimeType = _inferMimeType(imageBytes);
 
-    final response = await http.post(
-      Uri.parse(baseUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $apiKey',
-      },
-      body: jsonEncode({
-        'model': model,
-        'messages': [
-          {
-            'role': 'user',
-            'content': [
-              {
-                'type': 'image_url',
-                'image_url': {
-                  'url': 'data:$mimeType;base64,$base64Image',
+      final response = await http.post(
+        Uri.parse(baseUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': model,
+          'messages': [
+            {
+              'role': 'user',
+              'content': [
+                {
+                  'type': 'image_url',
+                  'image_url': {
+                    'url': 'data:$mimeType;base64,$base64Image',
+                  },
                 },
-              },
-              {
-                'type': 'text',
-                'text': _sceneAnalysisPrompt,
-              },
-            ],
-          },
-        ],
-        'temperature': 0.7,
-        'max_tokens': 2048,
-      }),
-    ).timeout(const Duration(seconds: 30));
+                {
+                  'type': 'text',
+                  'text': _sceneAnalysisPrompt,
+                },
+              ],
+            },
+          ],
+          'temperature': 0.7,
+          'max_tokens': 2048,
+        }),
+      ).timeout(const Duration(seconds: 30));
 
-    if (response.statusCode != 200) {
-      throw Exception(
-        'GLM API error: ${response.statusCode} - ${response.body}',
-      );
-    }
+      if (response.statusCode != 200) {
+        throw Exception(
+          'GLM API error: ${response.statusCode} - ${response.body}',
+        );
+      }
 
-    final json = jsonDecode(response.body);
-    final content = json['choices'][0]['message']['content'] as String;
-    return _parseSceneAnalysis(content);
+      final json = jsonDecode(response.body);
+      final content = json['choices'][0]['message']['content'] as String;
+      return _parseSceneAnalysis(content);
+    });
   }
 
   @override
   Future<PhotoAnalysis> analyzePhoto(Uint8List imageBytes) async {
-    final base64Image = base64Encode(imageBytes);
-    final mimeType = _inferMimeType(imageBytes);
+    return _withRetry(() async {
+      final base64Image = base64Encode(imageBytes);
+      final mimeType = _inferMimeType(imageBytes);
 
-    final response = await http.post(
-      Uri.parse(baseUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $apiKey',
-      },
-      body: jsonEncode({
-        'model': model,
-        'messages': [
-          {
-            'role': 'user',
-            'content': [
-              {
-                'type': 'image_url',
-                'image_url': {
-                  'url': 'data:$mimeType;base64,$base64Image',
+      final response = await http.post(
+        Uri.parse(baseUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': model,
+          'messages': [
+            {
+              'role': 'user',
+              'content': [
+                {
+                  'type': 'image_url',
+                  'image_url': {
+                    'url': 'data:$mimeType;base64,$base64Image',
+                  },
                 },
-              },
-              {
-                'type': 'text',
-                'text': _photoAnalysisPrompt,
-              },
-            ],
-          },
-        ],
-        'temperature': 0.7,
-        'max_tokens': 1024,
-      }),
-    ).timeout(const Duration(seconds: 30));
+                {
+                  'type': 'text',
+                  'text': _photoAnalysisPrompt,
+                },
+              ],
+            },
+          ],
+          'temperature': 0.7,
+          'max_tokens': 1024,
+        }),
+      ).timeout(const Duration(seconds: 30));
 
-    if (response.statusCode != 200) {
-      throw Exception(
-        'GLM API error: ${response.statusCode} - ${response.body}',
-      );
-    }
+      if (response.statusCode != 200) {
+        throw Exception(
+          'GLM API error: ${response.statusCode} - ${response.body}',
+        );
+      }
 
-    final json = jsonDecode(response.body);
-    final content = json['choices'][0]['message']['content'] as String;
-    return _parsePhotoAnalysis(content);
+      final json = jsonDecode(response.body);
+      final content = json['choices'][0]['message']['content'] as String;
+      return _parsePhotoAnalysis(content);
+    });
   }
 
   @override
@@ -190,7 +194,13 @@ class GlmVisionService implements VisionAIService {
   SceneAnalysis _parseSceneAnalysis(String content) {
     // 尝试提取 JSON（可能被 markdown 代码块包裹）
     final jsonStr = _extractJson(content);
-    final data = jsonDecode(jsonStr);
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(jsonStr) as Map<String, dynamic>;
+    } catch (e) {
+      throw FormatException('场景分析 JSON 解析失败: $e\n原始内容: ${jsonStr.length > 200 ? '${jsonStr.substring(0, 200)}...' : jsonStr}');
+    }
 
     final sceneData = data['scene'] as Map<String, dynamic>;
     final recsData = data['recommendations'] as List<dynamic>;
@@ -227,7 +237,13 @@ class GlmVisionService implements VisionAIService {
   /// 解析照片分析 JSON
   PhotoAnalysis _parsePhotoAnalysis(String content) {
     final jsonStr = _extractJson(content);
-    final data = jsonDecode(jsonStr);
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(jsonStr) as Map<String, dynamic>;
+    } catch (e) {
+      throw FormatException('照片分析 JSON 解析失败: $e\n原始内容: ${jsonStr.length > 200 ? '${jsonStr.substring(0, 200)}...' : jsonStr}');
+    }
 
     return PhotoAnalysis(
       score: (data['score'] as num?)?.toInt() ?? 50,
@@ -250,15 +266,27 @@ class GlmVisionService implements VisionAIService {
     final regex = RegExp(r'```(?:json)?\s*([\s\S]*?)```');
     final match = regex.firstMatch(content);
     if (match != null) {
-      return match.group(1)!.trim();
+      final json = match.group(1)!.trim();
+      _validateJson(json); // 验证是有效 JSON
+      return json;
     }
     // 尝试直接找 { }
     final start = content.indexOf('{');
     final end = content.lastIndexOf('}');
     if (start >= 0 && end > start) {
-      return content.substring(start, end + 1);
+      final json = content.substring(start, end + 1);
+      _validateJson(json);
+      return json;
     }
-    return content.trim();
+    throw FormatException('无法从内容中提取 JSON: ${content.length > 100 ? '${content.substring(0, 100)}...' : content}');
+  }
+
+  void _validateJson(String jsonStr) {
+    try {
+      jsonDecode(jsonStr);
+    } catch (e) {
+      throw FormatException('提取的 JSON 格式无效: $e');
+    }
   }
 
   /// 根据 magic bytes 推断 MIME 类型
@@ -274,5 +302,22 @@ class GlmVisionService implements VisionAIService {
     }
     // Default JPEG
     return 'image/jpeg';
+  }
+
+  /// HTTP 请求重试包装器（最多重试 2 次）
+  Future<T> _withRetry<T>(Future<T> Function() fn) async {
+    int attempts = 0;
+    const maxRetries = 2;
+
+    while (true) {
+      try {
+        return await fn();
+      } catch (e) {
+        attempts++;
+        if (attempts >= maxRetries) rethrow;
+        // 指数退避: 1s, 2s
+        await Future.delayed(Duration(seconds: attempts));
+      }
+    }
   }
 }

@@ -8,27 +8,57 @@ import '../../providers/gallery_provider.dart';
 import '../../data/photo_storage.dart';
 
 /// Photo detail page with full-screen view and AI analysis
+/// 
+/// 支持两种构造方式：
+/// - photo 参数：直接传入照片对象（推荐）
+/// - photoId 参数：通过 ID 从 Provider 查找
 class PhotoDetailPage extends ConsumerStatefulWidget {
-  final SavedPhoto photo;
+  final SavedPhoto? photo;
+  final String? photoId; // 备选：可通过 ID 查找
 
-  const PhotoDetailPage({super.key, required this.photo});
+  const PhotoDetailPage({
+    super.key,
+    this.photo,
+    this.photoId,
+  }) : assert(photo != null || photoId != null, '必须提供 photo 或 photoId');
 
   @override
   ConsumerState<PhotoDetailPage> createState() => _PhotoDetailPageState();
 }
 
 class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
-  late SavedPhoto _photo;
+  SavedPhoto? _photo;
   bool _isAnalyzing = false;
 
   @override
   void initState() {
     super.initState();
-    _photo = widget.photo;
+    if (widget.photo != null) {
+      _photo = widget.photo;
+    } else if (widget.photoId != null) {
+      _loadPhotoById();
+    }
+  }
+
+  Future<void> _loadPhotoById() async {
+    if (widget.photoId == null) return;
+    final galleryState = ref.read(galleryProvider);
+    final found = galleryState.photos.where((p) => p.id == widget.photoId).firstOrNull;
+    if (found != null && mounted) {
+      setState(() => _photo = found);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_photo == null) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.accent),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(

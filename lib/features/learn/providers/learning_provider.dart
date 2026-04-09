@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/tips_repository.dart';
+import '../models/shooting_tip.dart';
 
 /// 学习记录状态
 class LearningRecord {
@@ -143,7 +144,7 @@ final tipsRepositoryProvider = Provider<TipsRepository>((ref) {
 });
 
 /// 所有技巧列表 Provider
-final allTipsProvider = Provider<List<dynamic>>((ref) {
+final allTipsProvider = Provider<List<ShootingTip>>((ref) {
   return TipsRepository.instance.getAllTips();
 });
 
@@ -153,7 +154,7 @@ final selectedSceneTagsProvider = StateProvider<Set<String>>((ref) {
 });
 
 /// 筛选后的技巧列表 Provider
-final filteredTipsProvider = Provider<List<dynamic>>((ref) {
+final filteredTipsProvider = Provider<List<ShootingTip>>((ref) {
   final selectedTags = ref.watch(selectedSceneTagsProvider);
   final repository = ref.watch(tipsRepositoryProvider);
   

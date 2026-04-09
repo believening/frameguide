@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/colors.dart';
@@ -17,6 +18,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   final _apiKeyController = TextEditingController();
   final _baseUrlController = TextEditingController();
   final _modelController = TextEditingController();
+  Timer? _saveTimer; // 防抖定时器引用
 
   @override
   void initState() {
@@ -32,6 +34,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   void dispose() {
+    _saveTimer?.cancel(); // 取消待执行的保存
     _apiKeyController.dispose();
     _baseUrlController.dispose();
     _modelController.dispose();
@@ -325,8 +328,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _saveConfig() {
-    // 延迟保存，避免每次按键都保存
-    Future.delayed(const Duration(milliseconds: 500), () {
+    // 取消之前的定时器，实现防抖
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       final config = ref.read(aiConfigProvider);
       ref.read(aiConfigProvider.notifier).updateConfig(

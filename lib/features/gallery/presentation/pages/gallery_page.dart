@@ -209,11 +209,7 @@ class _PhotoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => PhotoDetailPage(photo: photo),
-          ),
-        );
+        context.push('/gallery/photo/${photo.id}', extra: photo);
       },
       onLongPress: onDelete,
       child: Container(

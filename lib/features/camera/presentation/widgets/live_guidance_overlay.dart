@@ -22,6 +22,7 @@ class _LiveGuidanceState extends ConsumerState<LiveGuidanceOverlay> {
   bool _busy = false;
   int _frames = 0;
   Timer? _timer;
+  CameraController? _streamController; // 跟踪 image stream 所属的 controller
 
   @override
   void initState() {
@@ -32,7 +33,20 @@ class _LiveGuidanceState extends ConsumerState<LiveGuidanceOverlay> {
   @override
   void dispose() {
     _timer?.cancel();
+    // 停止 image stream 避免内存泄漏
+    _stopImageStream();
     super.dispose();
+  }
+
+  void _stopImageStream() {
+    if (_streamController != null && _streamController!.value.isInitialized) {
+      try {
+        _streamController!.stopImageStream();
+      } catch (_) {
+        // ignore if already stopped
+      }
+      _streamController = null;
+    }
   }
 
   void _begin() {
@@ -46,6 +60,8 @@ class _LiveGuidanceState extends ConsumerState<LiveGuidanceOverlay> {
         return;
       }
 
+      // 记录 controller 以便 dispose 时停止 stream
+      _streamController = cs.controller;
       cs.controller!.startImageStream((img) {
         if (_busy) return;
         _frames++;
@@ -63,6 +79,7 @@ class _LiveGuidanceState extends ConsumerState<LiveGuidanceOverlay> {
         });
       });
     } catch (e) {
+      _stopImageStream();
       _startMock();
     }
   }
