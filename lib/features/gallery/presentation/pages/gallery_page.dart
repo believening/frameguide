@@ -208,92 +208,99 @@ class _PhotoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        context.push('/gallery/photo/${photo.id}', extra: photo);
-      },
-      onLongPress: onDelete,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.secondary,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Photo image
-            Image.file(
-              File(photo.filePath),
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Center(
-                child: Icon(
-                  Icons.broken_image,
-                  color: AppColors.textSecondary,
+    final dateStr = '${photo.takenAt.year}年${photo.takenAt.month}月${photo.takenAt.day}日';
+    final score = photo.analysis?.score;
+    final scoreStr = score != null ? '评分${(score * 100).toInt()}分' : '未分析';
+
+    return Semantics(
+      label: '照片 $dateStr，$scoreStr，点击查看详情，长按删除',
+      child: GestureDetector(
+        onTap: () {
+          context.push('/gallery/photo/${photo.id}', extra: photo);
+        },
+        onLongPress: onDelete,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.secondary,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Photo image
+              Image.file(
+                File(photo.filePath),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Center(
+                  child: Icon(
+                    Icons.broken_image,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
-            ),
 
-            // Score badge (top-right)
-            if (photo.analysis != null)
-              Positioned(
-                top: 4,
-                right: 4,
-                child: _ScoreBadge(score: photo.analysis!.score),
-              ),
+              // Score badge (top-right)
+              if (photo.analysis != null)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: _ScoreBadge(score: photo.analysis!.score),
+                ),
 
-            // Pending analysis badge (top-right)
-            if (photo.analysis == null)
+              // Pending analysis badge (top-right)
+              if (photo.analysis == null)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.textSecondary.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      '待分析',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Time label (bottom)
               Positioned(
-                top: 4,
-                right: 4,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
                     vertical: 2,
+                    horizontal: AppDimensions.spacingXs,
                   ),
-                  decoration: BoxDecoration(
-                    color: AppColors.textSecondary.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(4),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.transparent, Colors.black54],
+                    ),
                   ),
-                  child: const Text(
-                    '待分析',
-                    style: TextStyle(
-                      color: Colors.white,
+                  child: Text(
+                    _formatTime(photo.takenAt),
+                    style: const TextStyle(
+                      color: Colors.white70,
                       fontSize: 10,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
               ),
-
-            // Time label (bottom)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 2,
-                  horizontal: AppDimensions.spacingXs,
-                ),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black54],
-                  ),
-                ),
-                child: Text(
-                  _formatTime(photo.takenAt),
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 10,
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

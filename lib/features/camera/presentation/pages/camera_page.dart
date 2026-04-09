@@ -395,54 +395,66 @@ class _ControlBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               // 面板开关
-              IconButton(
-                onPressed: onTogglePanel,
-                icon: Icon(
-                  showPanel ? Icons.visibility : Icons.visibility_off,
-                  color: showPanel ? AppColors.accent : AppColors.textSecondary,
-                  size: AppDimensions.iconLg,
+              Semantics(
+                label: showPanel ? '隐藏分析面板' : '显示分析面板',
+                button: true,
+                child: IconButton(
+                  onPressed: onTogglePanel,
+                  icon: Icon(
+                    showPanel ? Icons.visibility : Icons.visibility_off,
+                    color: showPanel ? AppColors.accent : AppColors.textSecondary,
+                    size: AppDimensions.iconLg,
+                  ),
                 ),
               ),
 
               // 快门按钮
               GestureDetector(
                 onTap: isTakingPicture ? null : onTakePicture,
-                child: Container(
-                  width: 68,
-                  height: 68,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.textPrimary, width: 4),
-                  ),
-                  child: Center(
-                    child: isTakingPicture
-                        ? const SizedBox(
-                            width: 28,
-                            height: 28,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.accent,
+                child: Semantics(
+                  label: isTakingPicture ? '拍照中，请稍候' : '拍照按钮',
+                  button: true,
+                  child: Container(
+                    width: 68,
+                    height: 68,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.textPrimary, width: 4),
+                    ),
+                    child: Center(
+                      child: isTakingPicture
+                          ? const SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.accent,
+                              ),
+                            )
+                          : Container(
+                              width: 52,
+                              height: 52,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                          )
-                        : Container(
-                            width: 52,
-                            height: 52,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
+                    ),
                   ),
                 ),
               ),
 
               // 切换摄像头
-              IconButton(
-                onPressed: onSwitchCamera,
-                icon: const Icon(
-                  Icons.flip_camera_ios,
-                  color: AppColors.textPrimary,
-                  size: AppDimensions.iconLg,
+              Semantics(
+                label: '切换前后摄像头',
+                button: true,
+                child: IconButton(
+                  onPressed: onSwitchCamera,
+                  icon: const Icon(
+                    Icons.flip_camera_ios,
+                    color: AppColors.textPrimary,
+                    size: AppDimensions.iconLg,
+                  ),
                 ),
               ),
             ],
