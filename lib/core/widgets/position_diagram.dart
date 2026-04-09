@@ -1,30 +1,71 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/colors.dart';
-import '../../models/scene_analysis.dart';
+import 'package:frame_guide/core/constants/colors.dart';
 
 /// 机位方向示意图 - 用俯视图展示推荐站位和拍摄方向
+/// 统一组件，支持 PositionRecommendation 或字符串描述
 class PositionDiagram extends StatelessWidget {
-  final PositionRecommendation recommendation;
+  /// 位置方向：如 "左前"、"右后方"、"正面" 等
+  final String position;
+
+  /// 拍摄角度：如 "仰拍"、"俯拍"、"平拍" 等
+  final String angle;
+
+  /// 手机高度：如 "举高"、"平视"、"蹲低" 等
+  final String height;
+
+  /// 建议距离：如 "2-3米"、"1-2米" 等
+  final String distance;
 
   const PositionDiagram({
     super.key,
-    required this.recommendation,
+    required this.position,
+    required this.angle,
+    required this.height,
+    required this.distance,
   });
+
+  /// 从 PositionRecommendation 创建
+  factory PositionDiagram.fromRecommendation({
+    required String position,
+    required String angle,
+    required String height,
+    required String distance,
+  }) {
+    return PositionDiagram(
+      position: position,
+      angle: angle,
+      height: height,
+      distance: distance,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       size: const Size(double.infinity, 200),
-      painter: _PositionDiagramPainter(recommendation),
+      painter: _PositionDiagramPainter(
+        position: position,
+        angle: angle,
+        height: height,
+        distance: distance,
+      ),
     );
   }
 }
 
 class _PositionDiagramPainter extends CustomPainter {
-  final PositionRecommendation rec;
+  final String position;
+  final String angle;
+  final String height;
+  final String distance;
 
-  _PositionDiagramPainter(this.rec);
+  _PositionDiagramPainter({
+    required this.position,
+    required this.angle,
+    required this.height,
+    required this.distance,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -116,12 +157,12 @@ class _PositionDiagramPainter extends CustomPainter {
     );
 
     // 高度指示器（右侧）
-    _drawHeightIndicator(canvas, size, rec.height);
+    _drawHeightIndicator(canvas, size, height);
 
     // 角度文字标签
     final angleLabelPainter = TextPainter(
       text: TextSpan(
-        text: rec.angle,
+        text: angle,
         style: const TextStyle(
           color: AppColors.accent,
           fontSize: 11,
@@ -156,7 +197,7 @@ class _PositionDiagramPainter extends CustomPainter {
     // 距离标签
     final distLabelPainter = TextPainter(
       text: TextSpan(
-        text: rec.distance,
+        text: distance,
         style: const TextStyle(color: Colors.white70, fontSize: 10),
       ),
       textDirection: TextDirection.ltr,
@@ -168,28 +209,25 @@ class _PositionDiagramPainter extends CustomPainter {
   }
 
   ({double dx, double dy}) _parseShooterPosition() {
-    final pos = rec.position;
-    final angle = rec.angle;
-
     double dx = 0;
     double dy = -0.7;
 
-    if (pos.contains('左前')) {
+    if (position.contains('左前')) {
       dx = -0.5;
       dy = -0.6;
-    } else if (pos.contains('右前')) {
+    } else if (position.contains('右前')) {
       dx = 0.5;
       dy = -0.6;
-    } else if (pos.contains('左') && !pos.contains('前方')) {
+    } else if (position.contains('左') && !position.contains('前方')) {
       dx = -0.7;
       dy = 0;
-    } else if (pos.contains('右') && !pos.contains('前方')) {
+    } else if (position.contains('右') && !position.contains('前方')) {
       dx = 0.7;
       dy = 0;
-    } else if (pos.contains('正前方') || pos.contains('面对')) {
+    } else if (position.contains('正前方') || position.contains('面对')) {
       dx = 0;
       dy = -0.7;
-    } else if (pos.contains('对面') || pos.contains('退到')) {
+    } else if (position.contains('对面') || position.contains('退到')) {
       dx = 0;
       dy = -0.8;
     }
@@ -276,6 +314,9 @@ class _PositionDiagramPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PositionDiagramPainter oldDelegate) {
-    return oldDelegate.rec != rec;
+    return oldDelegate.position != position ||
+        oldDelegate.angle != angle ||
+        oldDelegate.height != height ||
+        oldDelegate.distance != distance;
   }
 }

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/colors.dart';
-import '../../../../core/constants/dimensions.dart';
+import 'package:frame_guide/core/constants/colors.dart';
+import 'package:frame_guide/core/constants/dimensions.dart';
+import 'package:frame_guide/core/widgets/position_diagram.dart';
 import '../../data/tips_repository.dart';
 import '../../providers/learning_provider.dart';
-import '../../widgets/position_diagram.dart';
 import '../widgets/tip_card.dart';
 
 /// 技巧详情页
@@ -16,6 +16,63 @@ class TipDetailPage extends ConsumerWidget {
     super.key,
     required this.tipId,
   });
+
+  /// 解析 positionDiagram 字符串中的位置方向
+  String _parsePosition(String diagram) {
+    // 格式: "俯视: 人物坐在窗边，拍摄者在侧面45度，距离2-3米"
+    final lower = diagram.toLowerCase();
+
+    // 提取拍摄者位置
+    if (lower.contains('侧面45') || lower.contains('侧45')) {
+      return '侧面45°';
+    } else if (lower.contains('正前方') || lower.contains('正面')) {
+      return '正面';
+    } else if (lower.contains('侧前方')) {
+      return '侧前方';
+    } else if (lower.contains('侧面')) {
+      return '侧面';
+    } else if (lower.contains('背后') || lower.contains('背')) {
+      return '背面';
+    } else if (lower.contains('对面')) {
+      return '对面';
+    } else if (lower.contains('低角度仰拍')) {
+      return '低角度仰拍';
+    }
+    return '正面';
+  }
+
+  /// 解析 positionDiagram 字符串中的角度
+  String _parseAngle(String diagram) {
+    // 格式: "俯视: ..."
+    final parts = diagram.split(':');
+    if (parts.isNotEmpty) {
+      final angle = parts[0].trim();
+      if (angle.contains('俯')) return '俯拍';
+      if (angle.contains('仰')) return '仰拍';
+      if (angle.contains('侧')) return '侧拍';
+    }
+    return '平拍';
+  }
+
+  /// 解析 positionDiagram 字符串中的距离
+  String _parseDistance(String diagram) {
+    final lower = diagram.toLowerCase();
+
+    if (lower.contains('50-80cm') || lower.contains('50cm')) {
+      return '50-80cm';
+    } else if (lower.contains('30-50cm')) {
+      return '30-50cm';
+    } else if (lower.contains('1-2米') || lower.contains('1.5')) {
+      return '1-2米';
+    } else if (lower.contains('2-3米') || lower.contains('2米')) {
+      return '2-3米';
+    } else if (lower.contains('3-5米') || lower.contains('3米')) {
+      return '3-5米';
+    } else if (lower.contains('5-8米') || lower.contains('5米')) {
+      return '5-8米';
+    }
+    return '2-3米';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -165,7 +222,12 @@ class TipDetailPage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppDimensions.spacingSm),
-                  TipPositionDiagram(positionDescription: tip.positionDiagram),
+                  PositionDiagram(
+                    position: _parsePosition(tip.positionDiagram),
+                    angle: _parseAngle(tip.positionDiagram),
+                    height: '平视',
+                    distance: _parseDistance(tip.positionDiagram),
+                  ),
 
                   const SizedBox(height: AppDimensions.spacingXl),
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/colors.dart';
-import '../../../../core/constants/dimensions.dart';
+import 'package:frame_guide/core/constants/colors.dart';
+import 'package:frame_guide/core/constants/dimensions.dart';
+import 'package:frame_guide/core/widgets/position_diagram.dart';
 import '../../models/scene_analysis.dart';
-import 'position_diagram.dart';
 
 /// 场景分析面板 - 显示场景信息和机位推荐
 class SceneAnalysisPanel extends StatelessWidget {
@@ -136,7 +136,12 @@ class _RecommendationCard extends StatelessWidget {
               bottomLeft: Radius.zero,
               bottomRight: Radius.zero,
             ),
-            child: PositionDiagram(recommendation: recommendation),
+            child: PositionDiagram.fromRecommendation(
+              position: recommendation.position,
+              angle: recommendation.angle,
+              height: recommendation.height,
+              distance: recommendation.distance,
+            ),
           ),
           const Divider(height: 1, color: AppColors.divider),
           // 内容

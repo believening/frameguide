@@ -52,9 +52,9 @@ class AppDivider extends StatelessWidget {
 
   const AppDivider({
     super.key,
-    this.height,
+    this.height = 1,
     this.padding,
-  }) : height = height ?? 1;
+  });
 
   @override
   Widget build(BuildContext context) {
