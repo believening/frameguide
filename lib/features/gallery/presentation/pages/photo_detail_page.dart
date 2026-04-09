@@ -59,13 +59,14 @@ class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
         ),
       );
     }
+    final photo = _photo!; // 空检查已通过，安全解包
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: AppColors.textPrimary,
         title: Text(
-          _formatDateTime(_photo.takenAt),
+          _formatDateTime(photo.takenAt),
           style: const TextStyle(fontSize: 14),
         ),
         actions: [
@@ -84,7 +85,7 @@ class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
               maxScale: 4.0,
               child: Center(
                 child: Image.file(
-                  File(_photo.filePath),
+                  File(photo.filePath),
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -116,8 +117,9 @@ class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
   Widget _buildAnalysisSection() {
     // Watch for gallery state changes to update photo
     ref.listen<GalleryState>(galleryProvider, (prev, next) {
-      final updated = next.photos.where((p) => p.id == _photo.id).firstOrNull;
-      if (updated != null && updated.analysis != _photo.analysis) {
+      if (_photo == null) return;
+      final updated = next.photos.where((p) => p.id == _photo!.id).firstOrNull;
+      if (updated != null && updated.analysis != _photo!.analysis) {
         setState(() {
           _photo = updated;
         });
@@ -128,8 +130,8 @@ class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
       return _buildAnalyzingIndicator();
     }
 
-    if (_photo.analysis != null) {
-      return _buildAnalysisCard(_photo.analysis!);
+    if (_photo?.analysis != null) {
+      return _buildAnalysisCard(_photo!.analysis!);
     }
 
     return _buildAnalyzeButton();
@@ -411,10 +413,11 @@ class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
   }
 
   Future<void> _analyzePhoto() async {
+    if (_photo == null) return;
     setState(() => _isAnalyzing = true);
 
     try {
-      await ref.read(galleryProvider.notifier).analyzePhoto(_photo);
+      await ref.read(galleryProvider.notifier).analyzePhoto(_photo!);
     } finally {
       if (mounted) {
         setState(() => _isAnalyzing = false);
@@ -443,7 +446,7 @@ class _PhotoDetailPageState extends ConsumerState<PhotoDetailPage> {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await ref.read(galleryProvider.notifier).deletePhoto(_photo);
+              await ref.read(galleryProvider.notifier).deletePhoto(_photo!);
               if (mounted) {
                 Navigator.pop(context);
               }

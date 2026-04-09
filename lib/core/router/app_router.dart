@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 
 import '../../features/camera/presentation/pages/camera_page.dart';
 import '../../features/gallery/presentation/pages/gallery_page.dart';
+import '../../features/gallery/data/photo_storage.dart';
 import '../../features/gallery/presentation/pages/photo_detail_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/shell/presentation/pages/shell_page.dart';
