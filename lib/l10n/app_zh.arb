@@ -1,0 +1,92 @@
+{
+  "@@locale": "zh",
+  "appName": "FrameGuide",
+  "appDescription": "AI 驱动的拍摄机位和角度推荐",
+  "appVersion": "版本 2.0.0",
+
+  "tabCamera": "相机",
+  "tabGallery": "相册",
+  "tabLearn": "学习",
+  "tabSettings": "设置",
+
+  "analyzeScene": "分析场景",
+  "analyzing": "分析中...",
+  "takePicture": "拍照",
+  "takingPicture": "拍照中，请稍候",
+  "switchCamera": "切换前后摄像头",
+  "showPanel": "显示分析面板",
+  "hidePanel": "隐藏分析面板",
+  "cameraInitFailed": "相机初始化失败",
+
+  "galleryTitle": "相册",
+  "photoScore": "评分{score}分",
+  "@photoScore": {
+    "placeholders": {
+      "score": { "type": "int" }
+    }
+  },
+  "photoNotAnalyzed": "未分析",
+  "photoTapHint": "照片 {date}，{score}，点击查看详情，长按删除",
+  "@photoTapHint": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "score": { "type": "String" }
+    }
+  },
+  "pendingAnalysis": "待分析",
+  "emptyGallery": "还没有照片",
+  "emptyGalleryHint": "拍摄你的第一张照片开始吧！",
+  "loadFailed": "加载失败",
+  "retry": "重试",
+  "operationFailed": "操作失败，请重试",
+
+  "aiAnalyzing": "AI 分析中...",
+  "aiAnalyzingHint": "正在分析构图、光线、构图等",
+  "startAiAnalysis": "开始 AI 分析",
+  "analysisComplete": "分析完成",
+  "analysisScore": "构图评分",
+  "analysisSummary": "总结",
+  "analysisStrengths": "优点",
+  "analysisImprovements": "改进建议",
+  "analysisNextTip": "下次提示",
+  "photoRequired": "必须提供 photo 或 photoId",
+  "tipNotExist": "技巧不存在",
+
+  "deletePhoto": "删除照片",
+  "deleteConfirm": "确定要删除这张照片吗？",
+  "delete": "删除",
+  "cancel": "取消",
+
+  "learnTitle": "学习",
+  "tipLocation": "推荐机位",
+  "tipParams": "拍摄参数建议",
+  "tipKeyPoints": "核心要点",
+  "tipFocalLength": "焦距",
+  "tipAperture": "光圈",
+  "tipSceneAll": "全部",
+  "tipLearned": "已学习",
+  "tipNotLearned": "未学习",
+  "learningStats": "学习统计",
+  "totalTips": "技巧总数",
+  "learnedCount": "已学习",
+  "shootingCount": "拍摄次数",
+  "sceneDistribution": "场景分布",
+
+  "settingsTitle": "设置",
+  "aiService": "AI 服务",
+  "aiProvider": "AI 供应商",
+  "apiKey": "API Key",
+  "apiKeyHint": "输入 API Key",
+  "apiBaseUrl": "API 地址",
+  "model": "模型",
+  "cameraSettings": "相机设置",
+  "resolution": "分辨率",
+  "about": "关于",
+
+  "errorNetwork": "网络连接失败，请检查网络设置",
+  "errorTimeout": "请求超时，请稍后重试",
+  "errorApiKey": "API Key 无效，请在设置中检查",
+  "errorRateLimit": "请求过于频繁，请稍后重试",
+  "errorCamera": "相机异常，请重新打开相机",
+  "errorFile": "文件操作失败，请重试"
+}

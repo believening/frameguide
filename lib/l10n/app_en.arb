@@ -1,0 +1,92 @@
+{
+  "@@locale": "en",
+  "appName": "FrameGuide",
+  "appDescription": "AI-powered shooting position and angle recommendations",
+  "appVersion": "Version 2.0.0",
+
+  "tabCamera": "Camera",
+  "tabGallery": "Gallery",
+  "tabLearn": "Learn",
+  "tabSettings": "Settings",
+
+  "analyzeScene": "Analyze Scene",
+  "analyzing": "Analyzing...",
+  "takePicture": "Take Photo",
+  "takingPicture": "Taking photo, please wait",
+  "switchCamera": "Switch camera",
+  "showPanel": "Show analysis panel",
+  "hidePanel": "Hide analysis panel",
+  "cameraInitFailed": "Camera initialization failed",
+
+  "galleryTitle": "Gallery",
+  "photoScore": "Score {score}",
+  "@photoScore": {
+    "placeholders": {
+      "score": { "type": "int" }
+    }
+  },
+  "photoNotAnalyzed": "Not analyzed",
+  "photoTapHint": "Photo {date}, {score}, tap for details, long press to delete",
+  "@photoTapHint": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "score": { "type": "String" }
+    }
+  },
+  "pendingAnalysis": "Pending",
+  "emptyGallery": "No photos yet",
+  "emptyGalleryHint": "Take your first photo to get started!",
+  "loadFailed": "Load failed",
+  "retry": "Retry",
+  "operationFailed": "Operation failed, please retry",
+
+  "aiAnalyzing": "AI Analyzing...",
+  "aiAnalyzingHint": "Analyzing composition, lighting, framing",
+  "startAiAnalysis": "Start AI Analysis",
+  "analysisComplete": "Analysis Complete",
+  "analysisScore": "Composition Score",
+  "analysisSummary": "Summary",
+  "analysisStrengths": "Strengths",
+  "analysisImprovements": "Improvements",
+  "analysisNextTip": "Next Time Tip",
+  "photoRequired": "Must provide photo or photoId",
+  "tipNotExist": "Tip not found",
+
+  "deletePhoto": "Delete Photo",
+  "deleteConfirm": "Are you sure you want to delete this photo?",
+  "delete": "Delete",
+  "cancel": "Cancel",
+
+  "learnTitle": "Learn",
+  "tipLocation": "Recommended Position",
+  "tipParams": "Shooting Parameters",
+  "tipKeyPoints": "Key Points",
+  "tipFocalLength": "Focal Length",
+  "tipAperture": "Aperture",
+  "tipSceneAll": "All",
+  "tipLearned": "Learned",
+  "tipNotLearned": "Not Learned",
+  "learningStats": "Learning Stats",
+  "totalTips": "Total Tips",
+  "learnedCount": "Learned",
+  "shootingCount": "Shots Taken",
+  "sceneDistribution": "Scene Distribution",
+
+  "settingsTitle": "Settings",
+  "aiService": "AI Service",
+  "aiProvider": "AI Provider",
+  "apiKey": "API Key",
+  "apiKeyHint": "Enter API Key",
+  "apiBaseUrl": "API Base URL",
+  "model": "Model",
+  "cameraSettings": "Camera Settings",
+  "resolution": "Resolution",
+  "about": "About",
+
+  "errorNetwork": "Network connection failed, please check settings",
+  "errorTimeout": "Request timed out, please try again",
+  "errorApiKey": "Invalid API Key, please check settings",
+  "errorRateLimit": "Too many requests, please try again later",
+  "errorCamera": "Camera error, please reopen camera",
+  "errorFile": "File operation failed, please retry"
+}
